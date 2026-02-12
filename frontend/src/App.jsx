@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const API_URL = '/api/todos';
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = `${BASE_URL}/api/todos`;
 
 function App() {
   const [todos, setTodos] = useState([]);
@@ -30,7 +31,7 @@ function App() {
 
   const auth = async (e) => {
     e.preventDefault();
-    const endpoint = isLoginView ? '/api/login' : '/api/signup';
+    const endpoint = isLoginView ? `${BASE_URL}/api/login` : `${BASE_URL}/api/signup`;
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -95,7 +96,7 @@ function App() {
   const fetchImages = async () => {
     setLoadingImages(true);
     try {
-      const response = await fetch('/api/upload', {
+      const response = await fetch(`${BASE_URL}/api/upload`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -174,7 +175,7 @@ function App() {
     reader.readAsDataURL(file);
     reader.onloadend = async () => {
       try {
-        const response = await fetch('/api/upload', {
+        const response = await fetch(`${BASE_URL}/api/upload`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
