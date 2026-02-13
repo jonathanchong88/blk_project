@@ -23,7 +23,7 @@ export default async function handler(req, res) {
         const hashedPassword = await bcrypt.hash(password, 10);
         const { error: insertError } = await supabase
             .from('users')
-            .insert([{ username, password: hashedPassword }]);
+            .insert([{ username, password: hashedPassword, role: 'member' }]);
 
         if (insertError) throw insertError;
         res.status(201).json({ message: 'User created' });

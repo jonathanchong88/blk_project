@@ -16,6 +16,7 @@ function Events({ token, BASE_URL, onEventClick }) {
   const [hasEndDate, setHasEndDate] = useState(false);
   const [storageImages, setStorageImages] = useState([]);
   const [loadingImages, setLoadingImages] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     if (imageType === 'storage' && showForm) {
@@ -42,6 +43,18 @@ function Events({ token, BASE_URL, onEventClick }) {
   useEffect(() => {
     fetchEvents();
   }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      fetch(`${BASE_URL}/api/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) setUserRole(data.role);
+      });
+    }
+  }, [token, BASE_URL]);
 
   const fetchEvents = async () => {
     try {
@@ -127,7 +140,7 @@ function Events({ token, BASE_URL, onEventClick }) {
     <div className="events-container">
       <div className="events-header">
         <h2>Upcoming Events</h2>
-        {token && (
+        {token && ['admin', 'editor', 'developer'].includes(userRole) && (
           <button onClick={() => setShowForm(!showForm)}>
             {showForm ? 'Cancel' : 'Create Event'}
           </button>

@@ -28,6 +28,20 @@ export default async function handler(req, res) {
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
         try {
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+
+            if (userError || !['admin', 'editor', 'developer'].includes(userData.role)) {
+                return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+            }
+        } catch (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        try {
             const { error } = await supabase
                 .from('events')
                 .delete()

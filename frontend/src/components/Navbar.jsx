@@ -1,9 +1,11 @@
 import React from 'react';
 
-function Navbar({ view, setView, logout, token }) {
+function Navbar({ view, setView, logout, token, userRole }) {
+  const canManageUsers = ['developer', 'admin', 'editor'].includes(userRole);
+
   return (
     <nav className="navbar">
-      <h1 className="navbar-brand">Todo App</h1>
+      <h1 className="navbar-brand">Power Station (Balakong LCMS)</h1>
       <div className="navbar-menu">
         <button 
           className={`nav-item ${view === 'home' ? 'active' : ''}`} 
@@ -17,6 +19,14 @@ function Navbar({ view, setView, logout, token }) {
         >
           Events
         </button>
+        {canManageUsers && (
+          <button 
+            className={`nav-item ${view === 'users' ? 'active' : ''}`} 
+            onClick={() => setView('users')}
+          >
+            Users
+          </button>
+        )}
         {token ? (
           <>
             <button 

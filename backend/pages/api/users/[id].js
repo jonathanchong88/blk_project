@@ -14,26 +14,21 @@ export default async function handler(req, res) {
         try {
             const { data, error } = await supabase
                 .from('users')
-                .select('username, name, age, address, phone, avatar_url, role')
+                .select('username, name, age, address, phone, avatar_url')
                 .eq('id', id)
                 .single();
 
-            if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-                throw error;
-            }
-
-            if (!data) return res.status(404).json({ message: 'User not found' });
-
+            if (error) throw error;
             res.json(data);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'PUT') {
-        const { name, age, address, phone, avatar_url, role } = req.body;
+        const { name, age, address, phone, avatar_url } = req.body;
         try {
             const { data, error } = await supabase
                 .from('users')
-                .update({ name, age, address, phone, avatar_url, role })
+                .update({ name, age, address, phone, avatar_url })
                 .eq('id', id)
                 .select();
 

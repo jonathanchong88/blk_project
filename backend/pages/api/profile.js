@@ -12,21 +12,26 @@ export default async function handler(req, res) {
         try {
             const { data, error } = await supabase
                 .from('users')
-                .select('username, name, age, address, phone, avatar_url')
+                .select('username, name, age, address, phone, avatar_url, role')
                 .eq('id', user.id)
                 .single();
 
-            if (error) throw error;
+            if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+                throw error;
+            }
+
+            if (!data) return res.status(404).json({ message: 'Profile not found' });
+
             res.json(data);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'PUT') {
-        const { name, age, address, phone, avatar_url } = req.body;
+        const { name, age, address, phone, avatar_url, role } = req.body;
         try {
             const { data, error } = await supabase
                 .from('users')
-                .update({ name, age, address, phone, avatar_url })
+                .update({ name, age, address, phone, avatar_url, role })
                 .eq('id', user.id)
                 .select();
 

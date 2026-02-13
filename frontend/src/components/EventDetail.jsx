@@ -4,6 +4,7 @@ function EventDetail({ token, BASE_URL, eventId, onBack }) {
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [userRole, setUserRole] = useState(null);
 
     useEffect(() => {
         const fetchEvent = async () => {
@@ -26,6 +27,18 @@ function EventDetail({ token, BASE_URL, eventId, onBack }) {
             fetchEvent();
         }
     }, [eventId, token, BASE_URL]);
+
+    useEffect(() => {
+        if (token) {
+            fetch(`${BASE_URL}/api/profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data) setUserRole(data.role);
+            });
+        }
+    }, [token, BASE_URL]);
 
     const confirmDelete = async () => {
         try {
@@ -53,7 +66,7 @@ function EventDetail({ token, BASE_URL, eventId, onBack }) {
         <div className="event-detail-container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px', flexWrap: 'wrap', gap: '10px' }}>
                 <button onClick={onBack} className="back-btn">← Back to Events</button>
-                {token && (
+                {token && ['admin', 'editor', 'developer'].includes(userRole) && (
                     <button onClick={() => setShowDeleteDialog(true)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Delete Event</button>
                 )}
             </div>

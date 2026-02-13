@@ -23,6 +23,20 @@ export default async function handler(req, res) {
     } else if (req.method === 'POST') {
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
+        try {
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+
+            if (userError || !['admin', 'editor', 'developer'].includes(userData.role)) {
+                return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+            }
+        } catch (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
         const { title, date, end_date, description, location, image_url } = req.body;
         if (!title || !date) {
             return res.status(400).json({ message: 'Title and Date are required' });

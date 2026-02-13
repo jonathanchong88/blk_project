@@ -54,6 +54,9 @@ function Profile({ token, BASE_URL, onEditClick }) {
         <div className="profile-info-item"><span>Age:</span> {profile.age || 'Not set'}</div>
         <div className="profile-info-item"><span>Address:</span> {profile.address || 'Not set'}</div>
         <div className="profile-info-item"><span>Phone:</span> {profile.phone || 'Not set'}</div>
+        {profile.role && profile.role !== 'member' && (
+          <div className="profile-info-item"><span>Role:</span> {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}</div>
+        )}
       </div>
     </div>
   );
