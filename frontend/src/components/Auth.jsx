@@ -41,7 +41,7 @@ function Auth({ setToken, BASE_URL }) {
   };
 
   return (
-    <div className="App login-page">
+    <div className="auth-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
       <h1>{isLoginView ? 'Login' : 'Sign Up'}</h1>
       <form onSubmit={auth} className="auth-form">
         <input 

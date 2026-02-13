@@ -6,7 +6,6 @@ export default async function handler(req, res) {
     await runMiddleware(req, res, cors);
 
     const user = authenticateToken(req);
-    if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     const { id } = req.query;
 
@@ -22,6 +21,21 @@ export default async function handler(req, res) {
             if (!data) return res.status(404).json({ message: 'Event not found' });
             
             res.json(data);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    } else if (req.method === 'DELETE') {
+        if (!user) return res.status(401).json({ message: 'Unauthorized' });
+
+        try {
+            const { error } = await supabase
+                .from('events')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+            res.status(204).end();
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

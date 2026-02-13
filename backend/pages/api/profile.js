@@ -6,44 +6,32 @@ export default async function handler(req, res) {
     await runMiddleware(req, res, cors);
 
     const user = authenticateToken(req);
+    if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     if (req.method === 'GET') {
         try {
-            // Fetch all events, ordered by date
             const { data, error } = await supabase
-                .from('events')
-                .select('*')
-                .order('date', { ascending: true });
+                .from('users')
+                .select('username, name, age, address, phone, avatar_url')
+                .eq('id', user.id)
+                .single();
 
             if (error) throw error;
             res.json(data);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
-    } else if (req.method === 'POST') {
-        if (!user) return res.status(401).json({ message: 'Unauthorized' });
-
-        const { title, date, end_date, description, location, image_url } = req.body;
-        if (!title || !date) {
-            return res.status(400).json({ message: 'Title and Date are required' });
-        }
-
+    } else if (req.method === 'PUT') {
+        const { name, age, address, phone, avatar_url } = req.body;
         try {
             const { data, error } = await supabase
-                .from('events')
-                .insert([{
-                    title,
-                    date,
-                    end_date: end_date || null,
-                    description,
-                    location,
-                    image_url,
-                    user_id: user.id
-                }])
+                .from('users')
+                .update({ name, age, address, phone, avatar_url })
+                .eq('id', user.id)
                 .select();
 
             if (error) throw error;
-            res.status(201).json(data[0]);
+            res.json(data[0]);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
