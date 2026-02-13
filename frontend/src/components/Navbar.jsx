@@ -1,44 +1,45 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 
-function Navbar({ view, setView, logout, token, userRole }) {
+function Navbar({ logout, token, userRole }) {
   const canManageUsers = ['developer', 'admin', 'editor'].includes(userRole);
 
   return (
     <nav className="navbar">
-      <h1 className="navbar-brand">Power Station (Balakong LCMS)</h1>
+      <NavLink to="/" className="navbar-brand">Power Station (Balakong LCMS)</NavLink>
       <div className="navbar-menu">
-        <button 
-          className={`nav-item ${view === 'home' ? 'active' : ''}`} 
-          onClick={() => setView('home')}
+        <NavLink 
+          to="/"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
         >
           Home
-        </button>
-        <button 
-          className={`nav-item ${view === 'events' ? 'active' : ''}`} 
-          onClick={() => setView('events')}
+        </NavLink>
+        <NavLink 
+          to="/events"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
         >
           Events
-        </button>
+        </NavLink>
         {canManageUsers && (
-          <button 
-            className={`nav-item ${view === 'users' ? 'active' : ''}`} 
-            onClick={() => setView('users')}
+          <NavLink 
+            to="/users"
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
           >
             Users
-          </button>
+          </NavLink>
         )}
         {token ? (
           <>
-            <button 
-              className={`nav-item ${view === 'profile' ? 'active' : ''}`} 
-              onClick={() => setView('profile')}
+            <NavLink 
+              to="/profile"
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
             >
               Profile
-            </button>
+            </NavLink>
             <button onClick={logout} className="logout-btn">Logout</button>
           </>
         ) : (
-          <button onClick={() => setView('login')} className="nav-item">Login</button>
+          <NavLink to="/login" className="nav-item">Login</NavLink>
         )}
       </div>
     </nav>

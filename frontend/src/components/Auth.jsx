@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function Auth({ setToken, BASE_URL }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoginView, setIsLoginView] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
 
   const auth = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const endpoint = isLoginView ? `${BASE_URL}/api/login` : `${BASE_URL}/api/signup`;
     try {
       const response = await fetch(endpoint, {
@@ -20,6 +26,7 @@ function Auth({ setToken, BASE_URL }) {
         if (isLoginView) {
           setToken(data.token);
           localStorage.setItem('token', data.token);
+          navigate(from, { replace: true });
         } else {
           alert('Signup successful! Please login.');
           setIsLoginView(true);
@@ -37,6 +44,8 @@ function Auth({ setToken, BASE_URL }) {
       }
     } catch (error) {
       console.error('Auth error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,7 +65,9 @@ function Auth({ setToken, BASE_URL }) {
           value={password} 
           onChange={e => setPassword(e.target.value)} 
         />
-        <button type="submit">{isLoginView ? 'Login' : 'Sign Up'}</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Processing...' : (isLoginView ? 'Login' : 'Sign Up')}
+        </button>
       </form>
       <button className="link-btn" onClick={() => setIsLoginView(!isLoginView)}>
         {isLoginView ? 'Need an account? Sign Up' : 'Have an account? Login'}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
-function EditProfile({ token, BASE_URL, onSave, onCancel, userId, currentUserRole }) {
+function EditProfile({ token, BASE_URL, currentUserRole }) {
   const [profile, setProfile] = useState({
     name: '',
     age: '',
@@ -12,6 +13,8 @@ function EditProfile({ token, BASE_URL, onSave, onCancel, userId, currentUserRol
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [roles, setRoles] = useState([]);
+  const { id: userId } = useParams(); // Get userId from URL if present
+  const navigate = useNavigate();
 
   const canEditRole = ['developer', 'admin', 'editor'].includes(currentUserRole);
 
@@ -91,7 +94,11 @@ function EditProfile({ token, BASE_URL, onSave, onCancel, userId, currentUserRol
       });
       if (response.ok) {
         alert('Profile updated successfully!');
-        onSave();
+        if (userId) {
+          navigate('/users');
+        } else {
+          navigate('/profile');
+        }
       } else {
         alert('Failed to update profile');
       }
@@ -132,7 +139,7 @@ function EditProfile({ token, BASE_URL, onSave, onCancel, userId, currentUserRol
           </select>
         </div>
         <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
-          <button type="button" onClick={onCancel} style={{ backgroundColor: '#6c757d' }}>Cancel</button>
+          <button type="button" onClick={() => navigate(userId ? '/users' : '/profile')} style={{ backgroundColor: '#6c757d' }}>Cancel</button>
           <button type="submit">Save Changes</button>
         </div>
       </form>

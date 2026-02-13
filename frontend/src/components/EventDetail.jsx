@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
-function EventDetail({ token, BASE_URL, eventId, onBack }) {
+function EventDetail({ token, BASE_URL }) {
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [userRole, setUserRole] = useState(null);
+    const { id } = useParams();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const response = await fetch(`${BASE_URL}/api/events/${eventId}`, {
+                const response = await fetch(`${BASE_URL}/api/events/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -23,10 +26,10 @@ function EventDetail({ token, BASE_URL, eventId, onBack }) {
             }
         };
 
-        if (eventId) {
+        if (id) {
             fetchEvent();
         }
-    }, [eventId, token, BASE_URL]);
+    }, [id, token, BASE_URL]);
 
     useEffect(() => {
         if (token) {
@@ -42,7 +45,7 @@ function EventDetail({ token, BASE_URL, eventId, onBack }) {
 
     const confirmDelete = async () => {
         try {
-            const response = await fetch(`${BASE_URL}/api/events/${eventId}`, {
+            const response = await fetch(`${BASE_URL}/api/events/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -50,7 +53,7 @@ function EventDetail({ token, BASE_URL, eventId, onBack }) {
             });
 
             if (response.ok) {
-                onBack();
+                navigate('/events');
             } else {
                 alert('Failed to delete event');
             }
@@ -59,16 +62,28 @@ function EventDetail({ token, BASE_URL, eventId, onBack }) {
         }
     };
 
+    const handleShare = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            alert('Link copied to clipboard!');
+        } catch (error) {
+            console.error('Error copying link:', error);
+        }
+    };
+
     if (loading) return <div>Loading...</div>;
     if (!event) return <div>Event not found</div>;
 
     return (
         <div className="event-detail-container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '20px', flexWrap: 'wrap', gap: '10px' }}>
-                <button onClick={onBack} className="back-btn">← Back to Events</button>
-                {token && ['admin', 'editor', 'developer'].includes(userRole) && (
-                    <button onClick={() => setShowDeleteDialog(true)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Delete Event</button>
-                )}
+            <div className="event-detail-actions">
+                <button onClick={() => navigate('/events')} className="back-btn">← Back to Events</button>
+                <div className="action-buttons">
+                    <button onClick={handleShare} className="share-btn">Share</button>
+                    {token && ['admin', 'editor', 'developer'].includes(userRole) && (
+                        <button onClick={() => setShowDeleteDialog(true)} className="delete-btn">Delete Event</button>
+                    )}
+                </div>
             </div>
             <div className="event-detail-header" style={{ backgroundImage: `url(${event.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}>
                 <div className="event-detail-title">
@@ -102,8 +117,8 @@ function EventDetail({ token, BASE_URL, eventId, onBack }) {
                         <h3>Confirm Delete</h3>
                         <p>Are you sure you want to delete this event?</p>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-                            <button onClick={() => setShowDeleteDialog(false)} style={{ backgroundColor: '#ccc', color: 'black' }}>Cancel</button>
-                            <button onClick={confirmDelete} style={{ backgroundColor: '#dc3545', color: 'white' }}>Delete</button>
+                            <button onClick={() => setShowDeleteDialog(false)} style={{ backgroundColor: '#6c757d' }}>Cancel</button>
+                            <button onClick={confirmDelete} className="delete-btn">Delete</button>
                         </div>
                     </div>
                 </div>

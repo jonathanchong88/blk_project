@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function Home({ BASE_URL, onEventClick }) {
+function Home({ BASE_URL }) {
   const [events, setEvents] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -39,7 +41,7 @@ function Home({ BASE_URL, onEventClick }) {
       <h2>Featured Events</h2>
       <div className="carousel">
         <button className="carousel-btn prev" onClick={prevSlide}>&#10094;</button>
-        <div className="carousel-content" onClick={() => onEventClick(currentEvent.id)}>
+        <div className="carousel-content" onClick={() => navigate(`/events/${currentEvent.id}`)}>
           <div 
             className="carousel-image" 
             style={{ backgroundImage: `url(${currentEvent.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}

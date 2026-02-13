@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function Events({ token, BASE_URL, onEventClick }) {
+function Events({ token, BASE_URL }) {
   const [events, setEvents] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -17,6 +18,7 @@ function Events({ token, BASE_URL, onEventClick }) {
   const [storageImages, setStorageImages] = useState([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (imageType === 'storage' && showForm) {
@@ -293,7 +295,7 @@ function Events({ token, BASE_URL, onEventClick }) {
           <h3 className="month-header">{month}</h3>
           <div className="events-grid">
             {monthEvents.map(event => (
-              <div key={event.id} className="event-card" onClick={() => onEventClick(event.id)} style={{ cursor: 'pointer' }}>
+              <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.id}`)} style={{ cursor: 'pointer' }}>
                 <div className="event-image" style={{ backgroundImage: `url(${event.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}>
                   <div className="event-date-badge">
                     {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

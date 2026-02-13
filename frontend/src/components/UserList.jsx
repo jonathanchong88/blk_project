@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function UserList({ token, BASE_URL, onEditUser }) {
+function UserList({ token, BASE_URL }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -51,7 +53,7 @@ function UserList({ token, BASE_URL, onEditUser }) {
                 <td>
                   <button 
                     className="edit-icon-btn" 
-                    onClick={() => onEditUser(user.id)}
+                    onClick={() => navigate(`/users/${user.id}/edit`)}
                     title="Edit User"
                     aria-label="Edit User"
                   >
