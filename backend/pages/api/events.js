@@ -12,11 +12,16 @@ export default async function handler(req, res) {
             // Fetch all events, ordered by date
             const { data, error } = await supabase
                 .from('events')
-                .select('*')
+                .select('*, event_likes(count)')
                 .order('date', { ascending: true });
 
             if (error) throw error;
-            res.json(data);
+            
+            const eventsWithCounts = data.map(event => ({
+                ...event,
+                likes_count: event.event_likes[0]?.count || 0
+            }));
+            res.json(eventsWithCounts);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

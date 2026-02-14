@@ -3,44 +3,11 @@ import { useNavigate } from 'react-router-dom';
 
 function Events({ token, BASE_URL }) {
   const [events, setEvents] = useState([]);
-  const [formData, setFormData] = useState({
-    title: '',
-    date: '',
-    end_date: '',
-    description: '',
-    location: '',
-    image_url: ''
-  });
-  const [showForm, setShowForm] = useState(false);
-  const [imageType, setImageType] = useState('url');
-  const [uploading, setUploading] = useState(false);
-  const [hasEndDate, setHasEndDate] = useState(false);
-  const [storageImages, setStorageImages] = useState([]);
-  const [loadingImages, setLoadingImages] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [userLikes, setUserLikes] = useState(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (imageType === 'storage' && showForm) {
-      const fetchStorageImages = async () => {
-        setLoadingImages(true);
-        try {
-          const response = await fetch(`${BASE_URL}/api/upload`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setStorageImages(data);
-          }
-        } catch (error) {
-          console.error('Error fetching images:', error);
-        } finally {
-          setLoadingImages(false);
-        }
-      };
-      fetchStorageImages();
-    }
-  }, [imageType, showForm, token, BASE_URL]);
 
   useEffect(() => {
     fetchEvents();
@@ -58,6 +25,27 @@ function Events({ token, BASE_URL }) {
     }
   }, [token, BASE_URL]);
 
+  useEffect(() => {
+    if (token) {
+      const fetchUserLikes = async () => {
+        try {
+          const response = await fetch(`${BASE_URL}/api/likes`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setUserLikes(new Set(data));
+          }
+        } catch (error) {
+          console.error('Error fetching likes:', error);
+        }
+      };
+      fetchUserLikes();
+    } else {
+      setUserLikes(new Set());
+    }
+  }, [token, BASE_URL]);
+
   const fetchEvents = async () => {
     try {
       const response = await fetch(`${BASE_URL}/api/events`, {
@@ -65,226 +53,110 @@ function Events({ token, BASE_URL }) {
       });
       if (response.ok) {
         const data = await response.json();
-        setEvents(data);
+        // Filter for upcoming events (date >= today)
+        const now = new Date();
+        setEvents(data.filter(event => new Date(event.date) >= now));
       }
     } catch (error) {
       console.error('Error fetching events:', error);
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const toggleLike = async (e, eventId) => {
+    e.stopPropagation();
+    if (!token) {
+      alert("Please login to like events");
+      return;
+    }
 
-    setUploading(true);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/upload`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            image: reader.result,
-            filename: file.name
-          }),
-        });
-        
-        let data;
-        try {
-            data = await response.json();
-        } catch (e) {
-            throw new Error('Server returned invalid response');
-        }
+    // Optimistic update
+    const isLiked = userLikes.has(eventId);
+    const newLikes = new Set(userLikes);
+    if (isLiked) newLikes.delete(eventId);
+    else newLikes.add(eventId);
+    setUserLikes(newLikes);
 
-        if (response.ok) {
-          setFormData(prev => ({ ...prev, image_url: data.url }));
-        } else {
-          alert(data.error || 'Upload failed');
-        }
-      } catch (error) {
-        console.error(error);
-        alert('Upload error: ' + error.message);
-      } finally {
-        setUploading(false);
-      }
-    };
-  };
+    setEvents(events.map(ev => 
+      ev.id === eventId ? { ...ev, likes_count: ev.likes_count + (isLiked ? -1 : 1) } : ev
+    ));
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     try {
-      const response = await fetch(`${BASE_URL}/api/events`, {
+      await fetch(`${BASE_URL}/api/likes`, {
         method: 'POST',
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ event_id: eventId })
       });
-      
-      if (response.ok) {
-        fetchEvents();
-        setFormData({ title: '', date: '', end_date: '', description: '', location: '', image_url: '' });
-        setShowForm(false);
-        setImageType('url');
-        setHasEndDate(false);
-      }
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('Error toggling like:', error);
     }
   };
+
+  const toggleSort = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
+  const filteredEvents = events
+    .filter(event => event.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      return sortOrder === 'asc' ? new Date(a.date) - new Date(b.date) : new Date(b.date) - new Date(a.date);
+    });
 
   return (
     <div className="events-container">
       <div className="events-header">
         <h2>Upcoming Events</h2>
-        {token && ['admin', 'editor', 'developer'].includes(userRole) && (
-          <button onClick={() => setShowForm(!showForm)}>
-            {showForm ? 'Cancel' : 'Create Event'}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => navigate('/events/past')} title="View Past Events" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px', color: 'black' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           </button>
-        )}
+          {token && ['admin', 'editor', 'developer'].includes(userRole) && (
+            <button onClick={() => navigate('/events/create')} title="Create Event" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px', color: 'black' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+        <input
+          type="text"
+          placeholder="Search events / 搜索活动"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #ddd', flex: 1, boxSizing: 'border-box' }}
+        />
+        <button 
+          onClick={toggleSort}
+          style={{ 
+            padding: '8px 12px', 
+            borderRadius: '4px', 
+            border: '1px solid #ddd', 
+            backgroundColor: 'white', 
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            color: 'black',
+            gap: '5px'
+          }}
+          title={sortOrder === 'asc' ? "Sort Descending" : "Sort Ascending"}
+        >
+          <span>Sorting</span>
+          {sortOrder === 'asc' ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg>
+          )}
+        </button>
       </div>
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="event-form">
-          <input
-            type="text"
-            placeholder="Event Title"
-            value={formData.title}
-            onChange={e => setFormData({...formData, title: e.target.value})}
-            required
-          />
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <input
-              type="datetime-local"
-              value={formData.date}
-              onChange={e => setFormData({...formData, date: e.target.value})}
-              required
-              style={{ flex: 1 }}
-            />
-            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}>
-              <input 
-                type="checkbox" 
-                checked={hasEndDate} 
-                onChange={e => {
-                  setHasEndDate(e.target.checked);
-                  if (!e.target.checked) setFormData(prev => ({...prev, end_date: ''}));
-                }} 
-              /> 
-              End Date?
-            </label>
-          </div>
-          {hasEndDate && (
-            <input
-              type="datetime-local"
-              value={formData.end_date}
-              onChange={e => setFormData({...formData, end_date: e.target.value})}
-              required={hasEndDate}
-            />
-          )}
-          <input
-            type="text"
-            placeholder="Location"
-            value={formData.location}
-            onChange={e => setFormData({...formData, location: e.target.value})}
-          />
-          
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ marginRight: '10px' }}>
-              <input 
-                type="radio" 
-                name="imageType" 
-                value="url" 
-                checked={imageType === 'url'} 
-                onChange={() => setImageType('url')} 
-              /> Image URL
-            </label>
-            <label style={{ marginRight: '10px' }}>
-              <input 
-                type="radio" 
-                name="imageType" 
-                value="upload" 
-                checked={imageType === 'upload'} 
-                onChange={() => setImageType('upload')} 
-              /> Upload Image
-            </label>
-            <label>
-              <input 
-                type="radio" 
-                name="imageType" 
-                value="storage" 
-                checked={imageType === 'storage'} 
-                onChange={() => setImageType('storage')} 
-              /> Select from Storage
-            </label>
-          </div>
-
-          {imageType === 'url' && (
-            <input
-              type="text"
-              placeholder="Image URL (Optional)"
-              value={formData.image_url}
-              onChange={e => setFormData({...formData, image_url: e.target.value})}
-            />
-          )}
-
-          {imageType === 'upload' && (
-            <div style={{ marginBottom: '10px' }}>
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploading}
-              />
-              {uploading && <p style={{ margin: '5px 0', fontSize: '0.9rem' }}>Uploading...</p>}
-              {formData.image_url && !uploading && (
-                <p style={{ margin: '5px 0', fontSize: '0.9rem', color: 'green' }}>Image uploaded!</p>
-              )}
-            </div>
-          )}
-
-          {imageType === 'storage' && (
-            <div style={{ marginBottom: '10px' }}>
-              {loadingImages ? <p>Loading images...</p> : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', padding: '10px', borderRadius: '4px' }}>
-                  {storageImages.length === 0 && <p>No images found in storage.</p>}
-                  {storageImages.map(img => (
-                    <img 
-                      key={img.name} 
-                      src={img.url} 
-                      alt={img.name} 
-                      title={img.name}
-                      style={{ 
-                        width: '80px', 
-                        height: '80px', 
-                        objectFit: 'cover', 
-                        cursor: 'pointer', 
-                        border: formData.image_url === img.url ? '3px solid #007bff' : '1px solid #ddd',
-                        borderRadius: '4px'
-                      }}
-                      onClick={() => setFormData({ ...formData, image_url: img.url })}
-                    />
-                  ))}
-                </div>
-              )}
-              {formData.image_url && <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '5px' }}>Selected: {formData.image_url.split('/').pop()}</p>}
-            </div>
-          )}
-
-          <textarea
-            placeholder="Description"
-            value={formData.description}
-            onChange={e => setFormData({...formData, description: e.target.value})}
-          />
-          <button type="submit">Save Event</button>
-        </form>
-      )}
-
-      {Object.entries(events.reduce((acc, event) => {
+      {filteredEvents.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '4rem', color: '#888', fontSize: '1.2rem' }}>Empty Result</div>
+      ) : (Object.entries(filteredEvents.reduce((acc, event) => {
         const date = new Date(event.date);
         const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
         if (!acc[monthYear]) acc[monthYear] = [];
@@ -315,12 +187,18 @@ function Events({ token, BASE_URL }) {
                     {' • '}{event.location || 'Online'}
                   </p>
                   <p className="event-desc">{event.description}</p>
+                  <div className="card-actions">
+                    <button className={`icon-btn like-icon-btn ${userLikes.has(event.id) ? 'liked' : ''}`} onClick={(e) => toggleLike(e, event.id)} title="Like">
+                      <svg className="like-icon" viewBox="0 0 24 24" width="20" height="20"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                      {event.likes_count > 0 && <span style={{marginLeft: '5px', fontSize: '0.9rem'}}>{event.likes_count}</span>}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      ))}
+      )))}
     </div>
   );
 }
