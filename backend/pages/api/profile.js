@@ -12,7 +12,7 @@ export default async function handler(req, res) {
         try {
             const { data, error } = await supabase
                 .from('users')
-                .select('username, name, age, address, phone, avatar_url, role')
+                .select('id, username, name, age, address, phone, avatar_url, role')
                 .eq('id', user.id)
                 .single();
 

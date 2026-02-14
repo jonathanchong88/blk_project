@@ -7,6 +7,9 @@ function EventDetail({ token, BASE_URL }) {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const [isLiked, setIsLiked] = useState(false);
+    const [attendees, setAttendees] = useState([]);
+    const [isAttending, setIsAttending] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState(null);
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -32,6 +35,24 @@ function EventDetail({ token, BASE_URL }) {
         }
     }, [id, token, BASE_URL]);
 
+    // Fetch attendees
+    useEffect(() => {
+        if (id) {
+            const fetchAttendees = async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/api/attendees?event_id=${id}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setAttendees(data);
+                    }
+                } catch (error) {
+                    console.error('Error fetching attendees:', error);
+                }
+            };
+            fetchAttendees();
+        }
+    }, [id, BASE_URL]);
+
     useEffect(() => {
         if (token) {
             fetch(`${BASE_URL}/api/profile`, {
@@ -39,7 +60,10 @@ function EventDetail({ token, BASE_URL }) {
             })
             .then(res => res.ok ? res.json() : null)
             .then(data => {
-                if (data) setUserRole(data.role);
+                if (data) {
+                    setUserRole(data.role);
+                    setCurrentUserId(data.id);
+                }
             });
         }
     }, [token, BASE_URL]);
@@ -62,6 +86,34 @@ function EventDetail({ token, BASE_URL }) {
             fetchLikeStatus();
         }
     }, [token, BASE_URL, id]);
+
+    useEffect(() => {
+        if (currentUserId && attendees.length > 0) {
+            setIsAttending(attendees.some(u => u.id === currentUserId));
+        } else {
+            setIsAttending(false);
+        }
+    }, [currentUserId, attendees]);
+
+    const handleAttend = async () => {
+        if (!token) {
+            alert("Please login to join events");
+            return;
+        }
+        try {
+            const response = await fetch(`${BASE_URL}/api/attendees`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ event_id: id })
+            });
+            if (response.ok) {
+                // Refresh attendees list
+                const attendeesRes = await fetch(`${BASE_URL}/api/attendees?event_id=${id}`);
+                const attendeesData = await attendeesRes.json();
+                setAttendees(attendeesData);
+            }
+        } catch (e) { console.error(e); }
+    };
 
     const toggleLike = async () => {
         if (!token) {
@@ -170,6 +222,9 @@ function EventDetail({ token, BASE_URL }) {
                     <p><strong>Location:</strong> {event.location || 'Online'}</p>
                     <p className="event-description">{event.description}</p>
                 </div>
+                <div style={{ marginTop: '20px' }}>
+                    <button onClick={handleAttend} className={`attend-btn ${isAttending ? 'attending' : ''}`}>{isAttending ? 'I am going ✓' : 'I am going'}</button>
+                </div>
             </div>
             {showDeleteDialog && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
@@ -183,6 +238,23 @@ function EventDetail({ token, BASE_URL }) {
                     </div>
                 </div>
             )}
+            
+            <div className="attendees-section">
+                <h3>Who join ({attendees.length})</h3>
+                <div className="attendees-list">
+                    {attendees.length === 0 ? <p style={{ color: '#666' }}>Be the first to join!</p> : attendees.map(user => (
+                        <div key={user.id} className="attendee-item" title={user.name || user.username}>
+                            {user.avatar_url ? (
+                                <img src={user.avatar_url} alt={user.username} className="attendee-avatar" />
+                            ) : (
+                                <div className="attendee-avatar placeholder">
+                                    {(user.name || user.username).charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
     );
 }

@@ -55,6 +55,7 @@ function Events({ token, BASE_URL }) {
         const data = await response.json();
         // Filter for upcoming events (date >= today)
         const now = new Date();
+        now.setHours(0, 0, 0, 0); // Include events from earlier today
         setEvents(data.filter(event => new Date(event.date) >= now));
       }
     } catch (error) {

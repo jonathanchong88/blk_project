@@ -12,8 +12,11 @@ function Home({ BASE_URL, token }) {
         const response = await fetch(`${BASE_URL}/api/events`);
         if (response.ok) {
           const data = await response.json();
-          // Take the first 10 events
-          setEvents(data.slice(0, 10));
+          // Filter for upcoming events (date >= today)
+          const now = new Date();
+          now.setHours(0, 0, 0, 0); // Include events from earlier today
+          const upcomingEvents = data.filter(event => new Date(event.date) >= now);
+          setEvents(upcomingEvents.slice(0, 10));
         }
       } catch (error) {
         console.error('Error fetching events:', error);

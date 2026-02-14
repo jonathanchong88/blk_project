@@ -518,6 +518,55 @@ button:hover {
   stroke: red;
 }
 
+.attend-btn {
+  background-color: black;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.attend-btn:hover {
+  opacity: 0.8;
+}
+
+.attend-btn.attending {
+  background-color: #333;
+  border: 2px solid #000;
+}
+
+.attendees-section {
+  padding: 2rem;
+  border-top: 1px solid #eee;
+}
+
+.attendees-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.attendee-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.attendee-avatar.placeholder {
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #555;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .App {
