@@ -1,6 +1,6 @@
 import db from '../../../db';
-import auth from '../../../middleware/auth';
-import cors from '../../../middleware/cors';
+import { authenticateToken } from '../../../middleware/auth';
+import { cors } from '../../../middleware/cors';
 
 function runMiddleware(req, res, fn) {
   return new Promise((resolve, reject) => {
@@ -14,11 +14,7 @@ function runMiddleware(req, res, fn) {
 }
 
 export default async function handler(req, res) {
-    // Handle potential ESM interop issue or missing default export
-    const corsMiddleware = typeof cors === 'function' ? cors : (cors && cors.default);
-    if (corsMiddleware) {
-        await runMiddleware(req, res, corsMiddleware);
-    }
+    await runMiddleware(req, res, cors);
 
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
@@ -41,7 +37,7 @@ export default async function handler(req, res) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'PUT') {
-        const user = auth(req);
+        const user = authenticateToken(req);
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
         const { title, author, locale, lyrics, image_url, video_url, music_sheet_url } = req.body;
@@ -58,7 +54,7 @@ export default async function handler(req, res) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'DELETE') {
-        const user = auth(req);
+        const user = authenticateToken(req);
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
         try {
