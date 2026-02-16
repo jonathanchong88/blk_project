@@ -15,6 +15,9 @@ import CreateEvent from './components/CreateEvent';
 import EditEvent from './components/EditEvent';
 import PastEvents from './components/PastEvents';
 import ProtectedRoute from './components/ProtectedRoute';
+import SongList from './components/SongList';
+import SongDetail from './components/SongDetail';
+import CreateEditSong from './components/CreateEditSong';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -78,6 +81,19 @@ function App() {
             <Route path="/users/:id/edit" element={
               <ProtectedRoute token={token}><EditProfile token={token} BASE_URL={BASE_URL} currentUserRole={userRole} /></ProtectedRoute>
             } />
+            
+            {/* Song Routes */}
+            <Route path="/worship/songs" element={<SongList token={token} BASE_URL={BASE_URL} />} />
+            <Route path="/worship/songs/create" element={
+              <ProtectedRoute token={token}><CreateEditSong token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+            } />
+            <Route path="/worship/songs/:id" element={<SongDetail token={token} BASE_URL={BASE_URL} />} />
+            <Route path="/worship/songs/:id/edit" element={
+              <ProtectedRoute token={token}><CreateEditSong token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+            } />
+            <Route path="/worship/band" element={<div>Band Page (Coming Soon)</div>} />
+            <Route path="/worship/schedule" element={<div>Schedule Page (Coming Soon)</div>} />
+
           </Routes>
         </div>
       </div>

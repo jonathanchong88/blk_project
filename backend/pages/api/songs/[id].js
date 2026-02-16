@@ -25,11 +25,11 @@ export default async function handler(req, res) {
         const user = authenticateToken(req);
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
-        const { title, author, locale, lyrics, image_url, video_url } = req.body;
+        const { title, author, locale, lyrics, image_url, video_url, music_sheet_url } = req.body;
         try {
             const { data, error } = await supabase
                 .from('songs')
-                .update({ title, author, locale, lyrics, image_url, video_url })
+                .update({ title, author, locale, lyrics, image_url, video_url, music_sheet_url })
                 .eq('id', id)
                 .select();
 

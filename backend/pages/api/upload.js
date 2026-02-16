@@ -43,7 +43,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
-    const { image, filename } = req.body;
+    const { image, filename, bucketName, folderPath } = req.body;
     if (!image || !filename) {
         return res.status(400).json({ message: 'Image and filename required' });
     }
@@ -58,9 +58,14 @@ export default async function handler(req, res) {
         const base64Data = matches[2];
         const buffer = Buffer.from(base64Data, 'base64');
 
-        const filePath = `${user.id}/${Date.now()}_${filename}`;
+        const targetBucket = bucketName || 'uploads';
+        const targetFolder = folderPath || user.id;
+        
+        // Sanitize filename to remove non-ASCII characters which can cause "Invalid key" errors
+        const sanitizedFilename = filename.replace(/[^\x00-\x7F]/g, '_');
+        const filePath = `${targetFolder}/${Date.now()}_${sanitizedFilename}`;
 
-        const { data, error } = await supabase.storage.from('uploads').upload(filePath, buffer, {
+        const { data, error } = await supabase.storage.from(targetBucket).upload(filePath, buffer, {
             contentType,
             upsert: false
         });
@@ -68,7 +73,7 @@ export default async function handler(req, res) {
             throw error;
         }
 
-        const { data: publicUrlData } = supabase.storage.from('uploads').getPublicUrl(filePath);
+        const { data: publicUrlData } = supabase.storage.from(targetBucket).getPublicUrl(filePath);
         res.status(200).json({ url: publicUrlData.publicUrl });
     } catch (err) {
         console.error('Upload API Error:', err);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 function Home({ BASE_URL, token }) {
   const [events, setEvents] = useState([]);
+  const [songs, setSongs] = useState([]);
   const [userLikes, setUserLikes] = useState(new Set());
   const navigate = useNavigate();
 
@@ -23,6 +24,21 @@ function Home({ BASE_URL, token }) {
       }
     };
     fetchEvents();
+  }, [BASE_URL]);
+
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/songs`);
+        if (response.ok) {
+          const data = await response.json();
+          setSongs(data.reverse().slice(0, 10));
+        }
+      } catch (error) {
+        console.error('Error fetching songs:', error);
+      }
+    };
+    fetchSongs();
   }, [BASE_URL]);
 
   useEffect(() => {
@@ -79,9 +95,12 @@ function Home({ BASE_URL, token }) {
     }
   };
 
-  if (events.length === 0) {
-    return <div style={{ textAlign: 'center', padding: '2rem' }}>No upcoming events at the moment.</div>;
-  }
+  const isNewSong = (dateString) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  };
 
   return (
     <div className="home-container">
@@ -89,29 +108,61 @@ function Home({ BASE_URL, token }) {
         <h2>Upcoming Events</h2>
         <button className="view-all-btn" onClick={() => navigate('/events')}>View All</button>
       </div>
-      <div className="horizontal-scroll-container">
-        {events.map(event => (
-          <div key={event.id} className="horizontal-card" onClick={() => navigate(`/events/${event.id}`)}>
-            <div 
-              className="card-image" 
-              style={{ backgroundImage: `url(${event.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}
-            ></div>
-            <div className="card-content">
-              <h3>{event.title}</h3>
-              <p>
-                {new Date(event.date).toLocaleDateString()} 
-                {event.location ? ` • ${event.location}` : ''}
-              </p>
-              <div className="card-actions">
-                <button className={`icon-btn like-icon-btn ${userLikes.has(event.id) ? 'liked' : ''}`} onClick={(e) => toggleLike(e, event.id)} title="Like">
-                  <svg className="like-icon" viewBox="0 0 24 24" width="20" height="20"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                  {event.likes_count > 0 && <span style={{marginLeft: '5px', fontSize: '0.9rem'}}>{event.likes_count}</span>}
-                </button>
+      {events.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>No upcoming events at the moment.</div>
+      ) : (
+        <div className="horizontal-scroll-container">
+          {events.map(event => (
+            <div key={event.id} className="horizontal-card" onClick={() => navigate(`/events/${event.id}`)}>
+              <div 
+                className="card-image" 
+                style={{ backgroundImage: `url(${event.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}
+              ></div>
+              <div className="card-content">
+                <h3>{event.title}</h3>
+                <p>
+                  {new Date(event.date).toLocaleDateString()} 
+                  {event.location ? ` • ${event.location}` : ''}
+                </p>
+                <div className="card-actions">
+                  <button className={`icon-btn like-icon-btn ${userLikes.has(event.id) ? 'liked' : ''}`} onClick={(e) => toggleLike(e, event.id)} title="Like">
+                    <svg className="like-icon" viewBox="0 0 24 24" width="20" height="20"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    {event.likes_count > 0 && <span style={{marginLeft: '5px', fontSize: '0.9rem'}}>{event.likes_count}</span>}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+      )}
+
+      <div className="section-header" style={{ marginTop: '30px' }}>
+        <h2>New Songs</h2>
+        <button className="view-all-btn" onClick={() => navigate('/worship/songs')}>View All</button>
       </div>
+      {songs.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>No songs available.</div>
+      ) : (
+        <div className="horizontal-scroll-container">
+          {songs.map(song => (
+            <div key={song.id} className="horizontal-card" onClick={() => navigate(`/worship/songs/${song.id}`)}>
+              <div 
+                className="card-image" 
+                style={{ backgroundImage: `url(${song.image_url || 'https://images.unsplash.com/photo-1507838153414-b4b713384ebd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}
+              ></div>
+              <div className="card-content">
+                <h3>
+                  {song.title}
+                  {isNewSong(song.created_at) && (
+                    <span style={{ backgroundColor: '#ff4757', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px', verticalAlign: 'middle' }}>New</span>
+                  )}
+                </h3>
+                <p>{song.author || 'Unknown'} • {song.locale === 'zh' ? 'Chinese' : 'English'}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
