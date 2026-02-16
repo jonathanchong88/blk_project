@@ -10,6 +10,11 @@ function EventDetail({ token, BASE_URL }) {
     const [attendees, setAttendees] = useState([]);
     const [isAttending, setIsAttending] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [setlist, setSetlist] = useState([]);
+    const [showSongModal, setShowSongModal] = useState(false);
+    const [allSongs, setAllSongs] = useState([]);
+    const [songSearchQuery, setSongSearchQuery] = useState('');
+    const [scheduledTeam, setScheduledTeam] = useState([]);
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -50,6 +55,39 @@ function EventDetail({ token, BASE_URL }) {
                 }
             };
             fetchAttendees();
+        }
+    }, [id, BASE_URL]);
+
+    // Fetch Setlist
+    useEffect(() => {
+        if (id) {
+            const fetchSetlist = async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/api/events/setlist?event_id=${id}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setSetlist(data);
+                    }
+                } catch (error) { console.error(error); }
+            };
+            fetchSetlist();
+        }
+    }, [id, BASE_URL]);
+
+    // Fetch Scheduled Team
+    useEffect(() => {
+        if (id) {
+            const fetchTeam = async () => {
+                try {
+                    // Fetching all and filtering client-side since backend filter might not be ready
+                    const response = await fetch(`${BASE_URL}/api/worship/schedule`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setScheduledTeam(data.filter(entry => entry.event_id === parseInt(id)));
+                    }
+                } catch (error) { console.error(error); }
+            };
+            fetchTeam();
         }
     }, [id, BASE_URL]);
 
@@ -170,8 +208,92 @@ function EventDetail({ token, BASE_URL }) {
         }
     };
 
+    const fetchAllSongs = async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/songs`);
+            if (response.ok) {
+                const data = await response.json();
+                setAllSongs(data);
+            }
+        } catch (error) { console.error(error); }
+    };
+
+    const handleAddSong = async (songId) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/events/setlist`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ event_id: id, song_id: songId, key_note: '' })
+            });
+            if (response.ok) {
+                const newEntry = await response.json();
+                setSetlist([...setlist, newEntry]);
+                setShowSongModal(false);
+            }
+        } catch (error) { console.error(error); }
+    };
+
+    const handleRemoveSong = async (entryId) => {
+        if (!window.confirm('Remove this song from setlist?')) return;
+        try {
+            const response = await fetch(`${BASE_URL}/api/events/setlist?id=${entryId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) setSetlist(setlist.filter(s => s.id !== entryId));
+        } catch (error) { console.error(error); }
+    };
+
+    const handleUpdateKey = async (entryId, currentKey) => {
+        const newKey = prompt("Enter Key (e.g., G, D, Bb):", currentKey || '');
+        if (newKey === null) return;
+
+        try {
+            const response = await fetch(`${BASE_URL}/api/events/setlist`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ id: entryId, key_note: newKey })
+            });
+
+            if (response.ok) {
+                const updatedEntry = await response.json();
+                setSetlist(setlist.map(s => s.id === entryId ? updatedEntry : s));
+            }
+        } catch (error) { console.error(error); }
+    };
+
+    const handleReorder = async (index, direction) => {
+        if (index + direction < 0 || index + direction >= setlist.length) return;
+
+        const currentItem = setlist[index];
+        const swapItem = setlist[index + direction];
+
+        // Optimistic update
+        const newSetlist = [...setlist];
+        newSetlist[index] = swapItem;
+        newSetlist[index + direction] = currentItem;
+        setSetlist(newSetlist);
+
+        try {
+            await Promise.all([
+                fetch(`${BASE_URL}/api/events/setlist`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ id: currentItem.id, sequence_number: swapItem.sequence_number })
+                }),
+                fetch(`${BASE_URL}/api/events/setlist`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ id: swapItem.id, sequence_number: currentItem.sequence_number })
+                })
+            ]);
+        } catch (error) { console.error("Failed to reorder", error); }
+    };
+
     if (loading) return <div>Loading...</div>;
     if (!event) return <div>Event not found</div>;
+
+    const isPastEvent = new Date(event.date) < new Date();
 
     return (
         <div className="event-detail-container">
@@ -223,9 +345,133 @@ function EventDetail({ token, BASE_URL }) {
                     <p className="event-description">{event.description}</p>
                 </div>
                 <div style={{ marginTop: '20px' }}>
-                    <button onClick={handleAttend} className={`attend-btn ${isAttending ? 'attending' : ''}`}>{isAttending ? 'I am going ✓' : 'I am going'}</button>
+                    <button onClick={handleAttend} className={`attend-btn ${isAttending ? 'attending' : ''}`} disabled={isPastEvent} style={isPastEvent ? { opacity: 0.6, cursor: 'not-allowed' } : {}}>{isAttending ? 'I am going ✓' : 'I am going'}</button>
                 </div>
             </div>
+
+            <div className="event-info-card" style={{ marginTop: '20px', padding: 0, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', borderBottom: '1px solid #eee', backgroundColor: '#fff' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2c3e50' }}>Worship Setlist</h3>
+                    {token && ['admin', 'editor', 'developer'].includes(userRole) && !isPastEvent && (
+                        <button 
+                            onClick={() => { setShowSongModal(true); fetchAllSongs(); }}
+                            style={{ 
+                                padding: '6px 12px', 
+                                fontSize: '0.85rem', 
+                                cursor: 'pointer', 
+                                backgroundColor: '#e3f2fd', 
+                                color: '#1565c0', 
+                                border: 'none', 
+                                borderRadius: '4px',
+                                fontWeight: '500'
+                            }}
+                        >
+                            + Add Song
+                        </button>
+                    )}
+                </div>
+                {setlist.length === 0 ? (
+                    <div style={{ padding: '30px', textAlign: 'center', color: '#888', fontStyle: 'italic' }}>No songs added yet.</div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {setlist.map((entry, index) => (
+                            <div key={entry.id} style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                padding: '12px 20px', 
+                                backgroundColor: 'white', 
+                                borderBottom: '1px solid #f0f0f0',
+                                transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                            >
+                                {token && ['admin', 'editor', 'developer'].includes(userRole) && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', marginRight: '15px' }}>
+                                        <button onClick={() => handleReorder(index, -1)} disabled={index === 0} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px', color: index === 0 ? '#eee' : '#888', lineHeight: 1 }}>▲</button>
+                                        <button onClick={() => handleReorder(index, 1)} disabled={index === setlist.length - 1} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px', color: index === setlist.length - 1 ? '#eee' : '#888', lineHeight: 1 }}>▼</button>
+                                    </div>
+                                )}
+                                <div style={{ 
+                                    fontWeight: 'bold', 
+                                    color: '#555', 
+                                    marginRight: '20px', 
+                                    width: '24px', 
+                                    height: '24px', 
+                                    borderRadius: '50%', 
+                                    backgroundColor: '#eee', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    fontSize: '0.8rem'
+                                }}>{index + 1}</div>
+                                <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => navigate(`/worship/songs/${entry.song.id}`)}>
+                                    <div style={{ fontWeight: '600', color: '#333', fontSize: '1rem' }}>{entry.song.title}</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '2px' }}>
+                                        {entry.song.author} 
+                                        <span 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (token && ['admin', 'editor', 'developer'].includes(userRole)) {
+                                                    handleUpdateKey(entry.id, entry.key_note);
+                                                }
+                                            }}
+                                            title="Click to edit key"
+                                            style={{ 
+                                                cursor: token && ['admin', 'editor', 'developer'].includes(userRole) ? 'pointer' : 'default', 
+                                                marginLeft: '8px', 
+                                                color: entry.key_note ? '#fff' : '#999',
+                                                backgroundColor: entry.key_note ? '#007bff' : '#f0f0f0',
+                                                padding: '2px 8px',
+                                                borderRadius: '4px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            {entry.key_note ? `Key: ${entry.key_note}` : '+ Add Key'}
+                                        </span>
+                                    </div>
+                                </div>
+                                {token && ['admin', 'editor', 'developer'].includes(userRole) && (
+                                    <button onClick={() => handleRemoveSong(entry.id)} style={{ background: 'none', border: 'none', color: '#ff4757', cursor: 'pointer', fontSize: '1.2rem', padding: '0 10px', opacity: 0.6 }} onMouseEnter={e => e.target.style.opacity = 1} onMouseLeave={e => e.target.style.opacity = 0.6}>×</button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {scheduledTeam.length > 0 && (
+                <div className="event-info-card" style={{ marginTop: '20px', padding: 0, overflow: 'hidden' }}>
+                    <div style={{ padding: '15px 20px', borderBottom: '1px solid #eee', backgroundColor: '#fff' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2c3e50' }}>Worship Team</h3>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', padding: '20px' }}>
+                        {scheduledTeam.map(entry => (
+                            <div key={entry.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div style={{ 
+                                    width: '60px', 
+                                    height: '60px', 
+                                    borderRadius: '50%', 
+                                    backgroundColor: '#e3f2fd', 
+                                    color: '#1565c0', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    marginBottom: '8px',
+                                    fontSize: '1.2rem',
+                                    fontWeight: 'bold',
+                                    overflow: 'hidden'
+                                }}>
+                                     {entry.member.avatar_url ? <img src={entry.member.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : entry.member.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#007bff', backgroundColor: '#e3f2fd', padding: '2px 8px', borderRadius: '10px' }}>{entry.role.name}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {showDeleteDialog && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '400px', width: '100%', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
@@ -255,6 +501,30 @@ function EventDetail({ token, BASE_URL }) {
                     ))}
                 </div>
             </div>
+
+            {showSongModal && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                    <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+                        <h3>Add Song to Setlist</h3>
+                        <input 
+                            type="text" 
+                            placeholder="Search songs..." 
+                            value={songSearchQuery}
+                            onChange={e => setSongSearchQuery(e.target.value)}
+                            style={{ padding: '10px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
+                        />
+                        <div style={{ overflowY: 'auto', flex: 1 }}>
+                            {allSongs.filter(s => s.title.toLowerCase().includes(songSearchQuery.toLowerCase())).map(song => (
+                                <div key={song.id} onClick={() => handleAddSong(song.id)} style={{ padding: '10px', borderBottom: '1px solid #eee', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                                    <span>{song.title}</span>
+                                    <span style={{ color: '#888', fontSize: '0.8rem' }}>{song.author}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={() => setShowSongModal(false)} style={{ marginTop: '10px', backgroundColor: '#6c757d' }}>Close</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

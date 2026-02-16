@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function CreateEvent({ token, BASE_URL }) {
   const [formData, setFormData] = useState({
@@ -16,6 +16,7 @@ function CreateEvent({ token, BASE_URL }) {
   const [storageImages, setStorageImages] = useState([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (imageType === 'storage') {
@@ -100,7 +101,12 @@ function CreateEvent({ token, BASE_URL }) {
       });
       
       if (response.ok) {
-        navigate('/events');
+        const data = await response.json();
+        if (location.state?.from === 'worship') {
+          navigate(`/worship/planner/${data.id}`);
+        } else {
+          navigate('/events');
+        }
       } else {
         const data = await response.json();
         alert(data.message || 'Failed to create event');
