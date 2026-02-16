@@ -1,15 +1,30 @@
-const supabase = require('../../../db');
-const { authenticateToken } = require('../../../middleware/auth');
-const { cors, runMiddleware } = require('../../../middleware/cors');
+import db from '../../../db';
+import auth from '../../../middleware/auth';
+import cors from '../../../middleware/cors';
+
+function runMiddleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
+    });
+  });
+}
 
 export default async function handler(req, res) {
-    await runMiddleware(req, res, cors);
+    // Handle potential ESM interop issue or missing default export
+    const corsMiddleware = typeof cors === 'function' ? cors : (cors && cors.default);
+    if (corsMiddleware) {
+        await runMiddleware(req, res, corsMiddleware);
+    }
 
     const { id } = req.query;
 
     if (req.method === 'GET') {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('songs')
                 .select('*')
                 .eq('id', id)
@@ -22,12 +37,12 @@ export default async function handler(req, res) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'PUT') {
-        const user = authenticateToken(req);
+        const user = auth(req);
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
         const { title, author, locale, lyrics, image_url, video_url, music_sheet_url } = req.body;
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('songs')
                 .update({ title, author, locale, lyrics, image_url, video_url, music_sheet_url })
                 .eq('id', id)
@@ -39,11 +54,11 @@ export default async function handler(req, res) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'DELETE') {
-        const user = authenticateToken(req);
+        const user = auth(req);
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
         try {
-            const { error } = await supabase.from('songs').delete().eq('id', id);
+            const { error } = await db.from('songs').delete().eq('id', id);
             if (error) throw error;
             res.status(204).end();
         } catch (err) {
