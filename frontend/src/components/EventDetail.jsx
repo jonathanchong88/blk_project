@@ -15,6 +15,10 @@ function EventDetail({ token, BASE_URL }) {
     const [allSongs, setAllSongs] = useState([]);
     const [songSearchQuery, setSongSearchQuery] = useState('');
     const [scheduledTeam, setScheduledTeam] = useState([]);
+    const [checkInList, setCheckInList] = useState([]);
+    const [allUsers, setAllUsers] = useState([]);
+    const [userSearchQuery, setUserSearchQuery] = useState('');
+    const [showUserDropdown, setShowUserDropdown] = useState(false);
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -132,6 +136,46 @@ function EventDetail({ token, BASE_URL }) {
             setIsAttending(false);
         }
     }, [currentUserId, attendees]);
+
+    // Fetch Check-in List (for admins)
+    useEffect(() => {
+        if (id && token && ['admin', 'editor', 'developer'].includes(userRole)) {
+            const fetchCheckInList = async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/api/events/checkin?event_id=${id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setCheckInList(data);
+                    }
+                } catch (error) {
+                    console.error('Error fetching check-in list:', error);
+                }
+            };
+            fetchCheckInList();
+        }
+    }, [id, token, userRole, BASE_URL, attendees]);
+
+    // Fetch All Users (for admin check-in selection)
+    useEffect(() => {
+        if (token && ['admin', 'editor', 'developer'].includes(userRole)) {
+            const fetchUsers = async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/api/users`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setAllUsers(data);
+                    }
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                }
+            };
+            fetchUsers();
+        }
+    }, [token, userRole, BASE_URL]);
 
     const handleAttend = async () => {
         if (!token) {
@@ -290,10 +334,64 @@ function EventDetail({ token, BASE_URL }) {
         } catch (error) { console.error("Failed to reorder", error); }
     };
 
+    const handleCheckInToggle = async (userId, currentStatus) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/events/checkin`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ event_id: id, user_id: userId, checked_in: !currentStatus })
+            });
+            
+            if (response.ok) {
+                setCheckInList(prev => prev.map(u => 
+                    u.id === userId ? { ...u, checked_in: !currentStatus } : u
+                ));
+            }
+        } catch (error) {
+            console.error('Error toggling check-in:', error);
+        }
+    };
+
+    const handleAddCheckIn = async (userId) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/events/checkin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ event_id: id, user_id: userId, checked_in: true })
+            });
+            
+            if (response.ok) {
+                // Refresh check-in list
+                const checkInRes = await fetch(`${BASE_URL}/api/events/checkin?event_id=${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (checkInRes.ok) {
+                    setCheckInList(await checkInRes.json());
+                }
+                setShowUserDropdown(false);
+                setUserSearchQuery('');
+            }
+        } catch (error) {
+            console.error('Error adding check-in:', error);
+        }
+    };
+
     if (loading) return <div>Loading...</div>;
     if (!event) return <div>Event not found</div>;
 
     const isPastEvent = new Date(event.date) < new Date();
+    
+    const isEventDay = (() => {
+        const t = new Date();
+        const s = new Date(event.date);
+        const e = event.end_date ? new Date(event.end_date) : new Date(event.date);
+        
+        const tDate = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+        const sDate = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+        const eDate = new Date(e.getFullYear(), e.getMonth(), e.getDate());
+        
+        return tDate >= sDate && tDate <= eDate;
+    })();
 
     return (
         <div className="event-detail-container">
@@ -345,9 +443,143 @@ function EventDetail({ token, BASE_URL }) {
                     <p className="event-description">{event.description}</p>
                 </div>
                 <div style={{ marginTop: '20px' }}>
-                    <button onClick={handleAttend} className={`attend-btn ${isAttending ? 'attending' : ''}`} disabled={isPastEvent} style={isPastEvent ? { opacity: 0.6, cursor: 'not-allowed' } : {}}>{isAttending ? 'I am going ✓' : 'I am going'}</button>
+                    <button onClick={handleAttend} className={`attend-btn ${isAttending ? 'attending' : ''}`} disabled={isPastEvent} style={isPastEvent ? { opacity: 0.6, cursor: 'not-allowed' } : {}}>{isAttending ? 'RSVP\'d ✓' : 'RSVP'}</button>
                 </div>
             </div>
+
+            {token && ['admin', 'editor', 'developer'].includes(userRole) && (
+                <div className="event-info-card" style={{ marginTop: '20px', padding: 0, overflow: 'hidden' }}>
+                    <div style={{ padding: '15px 20px', borderBottom: '1px solid #eee', backgroundColor: '#fff' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2c3e50' }}>Check-in Management</h3>
+                    </div>
+                    
+                    <div style={{ padding: '20px' }}>
+                        <div style={{ marginBottom: '15px', position: 'relative' }}>
+                        <div 
+                            onClick={() => isEventDay && setShowUserDropdown(!showUserDropdown)}
+                            style={{ 
+                                padding: '10px', 
+                                borderRadius: '4px', 
+                                border: '1px solid #ddd', 
+                                cursor: isEventDay ? 'pointer' : 'not-allowed',
+                                backgroundColor: isEventDay ? 'white' : '#f9f9f9',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                opacity: isEventDay ? 1 : 0.6
+                            }}
+                            title={!isEventDay ? "Check-in is only available on the event day" : ""}
+                        >
+                            <span style={{ color: '#888' }}>+ Add / Check-in User</span>
+                            <span style={{ fontSize: '0.8rem' }}>▼</span>
+                        </div>
+
+                        {showUserDropdown && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: 0,
+                                right: 0,
+                                backgroundColor: 'white',
+                                border: '1px solid #ddd',
+                                borderRadius: '4px',
+                                zIndex: 10,
+                                maxHeight: '200px',
+                                overflowY: 'auto',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                marginTop: '5px'
+                            }}>
+                                <div style={{ padding: '8px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, background: 'white' }}>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search user..." 
+                                        value={userSearchQuery}
+                                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #eee', borderRadius: '4px', boxSizing: 'border-box', outline: 'none' }}
+                                        autoFocus
+                                    />
+                                </div>
+                                {allUsers.filter(u => (u.name || u.username).toLowerCase().includes(userSearchQuery.toLowerCase())).map(user => {
+                                    const isCheckedIn = checkInList.some(c => c.id === user.id && c.checked_in);
+                                    return (
+                                        <div 
+                                            key={user.id} 
+                                            onClick={() => isEventDay && !isCheckedIn && handleAddCheckIn(user.id)}
+                                            style={{
+                                                padding: '10px',
+                                                cursor: (isCheckedIn || !isEventDay) ? 'default' : 'pointer',
+                                                borderBottom: '1px solid #f5f5f5',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                opacity: isCheckedIn ? 0.5 : 1,
+                                                backgroundColor: isCheckedIn ? '#f9f9f9' : 'white'
+                                            }}
+                                            onMouseEnter={(e) => !isCheckedIn && (e.currentTarget.style.backgroundColor = '#f0f7ff')}
+                                            onMouseLeave={(e) => !isCheckedIn && (e.currentTarget.style.backgroundColor = 'white')}
+                                        >
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, fontSize: '0.8rem', color: '#666', fontWeight: 'bold' }}>
+                                                {user.avatar_url ? <img src={user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user.name || user.username).charAt(0).toUpperCase()}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: '500' }}>{user.name || user.username}</div>
+                                            </div>
+                                            {isCheckedIn && <span style={{ fontSize: '0.8rem', color: 'green' }}>Checked In</span>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {checkInList.length === 0 ? <p style={{ color: '#666' }}>No attendees yet.</p> : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '10px' }}>
+                            {checkInList.map(user => (
+                                <div 
+                                    key={user.id} 
+                                    onClick={() => isEventDay && handleCheckInToggle(user.id, user.checked_in)}
+                                    style={{ 
+                                        display: 'flex', 
+                                        flexDirection: 'column', 
+                                        alignItems: 'center', 
+                                        cursor: isEventDay ? 'pointer' : 'not-allowed',
+                                        opacity: isEventDay ? 1 : 0.6
+                                    }}
+                                    title={user.name || user.username}
+                                >
+                                    <div style={{ 
+                                        width: '50px', 
+                                        height: '50px', 
+                                        borderRadius: '50%', 
+                                        overflow: 'hidden', 
+                                        backgroundColor: '#eee', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        fontWeight: 'bold', 
+                                        color: '#666', 
+                                        fontSize: '1.2rem',
+                                        marginBottom: '4px',
+                                        border: user.checked_in ? '3px solid #4caf50' : '3px solid transparent',
+                                        boxSizing: 'border-box'
+                                    }}>
+                                        {user.avatar_url ? (
+                                            <img src={user.avatar_url} alt={user.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            (user.name || user.username || '?').charAt(0).toUpperCase()
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: user.checked_in ? '#4caf50' : 'inherit', fontWeight: user.checked_in ? 'bold' : 'normal' }}>
+                                        {user.name || user.username}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    </div>
+                </div>
+            )}
 
             <div className="event-info-card" style={{ marginTop: '20px', padding: 0, overflow: 'hidden' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', borderBottom: '1px solid #eee', backgroundColor: '#fff' }}>
@@ -486,20 +718,40 @@ function EventDetail({ token, BASE_URL }) {
             )}
             
             <div className="attendees-section">
-                <h3>Who join ({attendees.length})</h3>
-                <div className="attendees-list">
-                    {attendees.length === 0 ? <p style={{ color: '#666' }}>Be the first to join!</p> : attendees.map(user => (
-                        <div key={user.id} className="attendee-item" title={user.name || user.username}>
-                            {user.avatar_url ? (
-                                <img src={user.avatar_url} alt={user.username} className="attendee-avatar" />
-                            ) : (
-                                <div className="attendee-avatar placeholder">
-                                    {(user.name || user.username).charAt(0).toUpperCase()}
+                <h3>RSVPs ({attendees.length})</h3>
+                {attendees.length === 0 ? (
+                    <p style={{ color: '#666' }}>Be the first to RSVP!</p>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '10px' }}>
+                        {attendees.map(user => (
+                            <div key={user.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
+                                <div style={{ 
+                                    width: '50px', 
+                                    height: '50px', 
+                                    borderRadius: '50%', 
+                                    overflow: 'hidden', 
+                                    backgroundColor: '#eee', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    fontWeight: 'bold', 
+                                    color: '#666', 
+                                    fontSize: '1.2rem',
+                                    marginBottom: '4px'
+                                }}>
+                                    {user.avatar_url ? (
+                                        <img src={user.avatar_url} alt={user.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        (user.name || user.username).charAt(0).toUpperCase()
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                                <div style={{ fontSize: '0.75rem', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {user.name || user.username}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {showSongModal && (
