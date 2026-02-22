@@ -64,10 +64,18 @@ function Sidebar({ userRole }) {
           <NavLink to="/events" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             Events
           </NavLink>
+          <NavLink to="/salvation" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            Salvation
+          </NavLink>
           {canManageUsers && (
-            <NavLink to="/users" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-              Users
-            </NavLink>
+            <>
+              <NavLink to="/users" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                Users
+              </NavLink>
+              <NavLink to="/salvation/admin" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                Commitments
+              </NavLink>
+            </>
           )}
 
           <div className="sidebar-section-header">Worship</div>

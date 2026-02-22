@@ -5,6 +5,9 @@ function Home({ BASE_URL, token }) {
   const [events, setEvents] = useState([]);
   const [songs, setSongs] = useState([]);
   const [userLikes, setUserLikes] = useState(new Set());
+  const [currentUser, setCurrentUser] = useState(null);
+  const [mySchedule, setMySchedule] = useState([]);
+  const [salvationCount, setSalvationCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,6 +65,59 @@ function Home({ BASE_URL, token }) {
     }
   }, [token, BASE_URL]);
 
+  // Fetch User Profile and Personal Schedule
+  useEffect(() => {
+    if (token) {
+      const fetchPersonalData = async () => {
+        try {
+          // 1. Get Profile
+          const profileRes = await fetch(`${BASE_URL}/api/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (profileRes.ok) {
+            const profile = await profileRes.json();
+            setCurrentUser(profile);
+
+            // 2. Get Schedule and Filter
+            const scheduleRes = await fetch(`${BASE_URL}/api/worship/schedule`);
+            const eventsRes = await fetch(`${BASE_URL}/api/events`);
+            
+            if (scheduleRes.ok && eventsRes.ok) {
+              const scheduleData = await scheduleRes.json();
+              const eventsData = await eventsRes.json();
+              
+              // Map events to schedule entries
+              const myAssignments = scheduleData
+                .filter(entry => entry.member.email === profile.email) // Match by email
+                .map(entry => {
+                  const event = eventsData.find(e => e.id === entry.event_id);
+                  return { ...entry, event };
+                })
+                .filter(item => item.event && new Date(item.event.date) >= new Date()) // Only upcoming
+                .sort((a, b) => new Date(a.event.date) - new Date(b.event.date));
+
+              setMySchedule(myAssignments);
+            }
+
+            // 3. Get Salvation Stats (if admin)
+            if (['admin', 'developer', 'editor'].includes(profile.role)) {
+                const salvationRes = await fetch(`${BASE_URL}/api/salvation/commitments`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (salvationRes.ok) {
+                    const data = await salvationRes.json();
+                    setSalvationCount(data.length);
+                }
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching personal data:', error);
+        }
+      };
+      fetchPersonalData();
+    }
+  }, [token, BASE_URL]);
+
   const toggleLike = async (e, eventId) => {
     e.stopPropagation();
     if (!token) {
@@ -104,6 +160,51 @@ function Home({ BASE_URL, token }) {
 
   return (
     <div className="home-container">
+      {/* Dashboard Widgets */}
+      {token && currentUser && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+            {/* My Schedule Widget */}
+            <div className="event-card" style={{ cursor: 'default', padding: '20px', borderLeft: '4px solid #007bff' }}>
+                <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    My Schedule
+                </h3>
+                {mySchedule.length === 0 ? (
+                    <p style={{ color: '#666' }}>No upcoming assignments.</p>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {mySchedule.slice(0, 3).map(item => (
+                            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
+                                <div>
+                                    <div style={{ fontWeight: 'bold' }}>{item.event.title}</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#666' }}>{new Date(item.event.date).toLocaleDateString()}</div>
+                                </div>
+                                <span style={{ backgroundColor: '#e3f2fd', color: '#1565c0', padding: '2px 8px', borderRadius: '10px', fontSize: '0.75rem' }}>
+                                    {item.role.name}
+                                </span>
+                            </div>
+                        ))}
+                        {mySchedule.length > 3 && <button onClick={() => navigate('/worship/schedule')} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', textAlign: 'left', padding: 0 }}>View all ({mySchedule.length})</button>}
+                    </div>
+                )}
+            </div>
+
+            {/* Admin Stats Widget */}
+            {['admin', 'developer', 'editor'].includes(currentUser.role) && (
+                <div className="event-card" style={{ cursor: 'pointer', padding: '20px', borderLeft: '4px solid #FE5708', display: 'flex', flexDirection: 'column', justifyContent: 'center' }} onClick={() => navigate('/salvation/admin')}>
+                    <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px', color: '#FE5708' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path></svg>
+                        Salvation Decisions
+                    </h3>
+                    <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#333' }}>
+                        {salvationCount}
+                    </div>
+                    <p style={{ margin: 0, color: '#666' }}>Total commitments made</p>
+                </div>
+            )}
+        </div>
+      )}
+
       <div className="section-header">
         <h2>Upcoming Events</h2>
         <button className="view-all-btn" onClick={() => navigate('/events')}>View All</button>

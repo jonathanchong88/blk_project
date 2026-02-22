@@ -1,0 +1,47 @@
+import db from '../../../db';
+import { cors } from '../../../middleware/cors';
+
+function runMiddleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
+    });
+  });
+}
+
+export default async function handler(req, res) {
+  await runMiddleware(req, res, cors);
+
+  if (req.method !== 'POST') return res.status(405).end();
+
+  const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ message: 'Missing fields' });
+
+  try {
+    const { data: user, error } = await db.from('users')
+        .select('id, verification_code')
+        .eq('email', email)
+        .single();
+
+    if (error || !user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.verification_code !== code) {
+        return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    const { error: updateError } = await db.from('users').update({
+        is_verified: true,
+        verification_code: null
+    }).eq('id', user.id);
+
+    if (updateError) throw updateError;
+
+    res.json({ message: 'Email verified successfully' });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}

@@ -31,6 +31,50 @@ function UserList({ token, BASE_URL }) {
 
   if (loading) return <div>Loading users...</div>;
 
+  const toggleStatus = async (userId, currentStatus) => {
+    const newStatus = currentStatus === false ? true : false;
+    if (!window.confirm(`Are you sure you want to ${newStatus ? 'activate' : 'deactivate'} this user?`)) return;
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/users/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ user_id: userId, is_active: newStatus })
+      });
+      if (response.ok) {
+        setUsers(users.map(u => u.id === userId ? { ...u, is_active: newStatus } : u));
+      } else {
+        alert('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const handleResetPassword = async (email) => {
+    if (!email) return alert("No email found for this user.");
+    if (!window.confirm(`Send password reset link to ${email}?`)) return;
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Reset link sent!');
+        if (data.testLink) console.log("Reset Link:", data.testLink);
+      } else {
+        alert(data.message || 'Failed to send reset link');
+      }
+    } catch (error) {
+      console.error('Error sending reset link:', error);
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     const query = searchQuery.toLowerCase();
     const matchesSearch = (
@@ -166,10 +210,28 @@ function UserList({ token, BASE_URL }) {
                     )}
               </div>
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || user.username}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '1.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || user.username}</div>
+                    <button 
+                        onClick={() => toggleStatus(user.id, user.is_active)}
+                        style={{
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            backgroundColor: user.is_active !== false ? '#d4edda' : '#f8d7da',
+                            color: user.is_active !== false ? '#155724' : '#721c24',
+                            fontSize: '0.7rem',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap'
+                        }}
+                    >
+                        {user.is_active !== false ? 'Active' : 'Inactive'}
+                    </button>
+                </div>
                 <div style={{ color: '#666', fontSize: '0.9rem' }}>@{user.username}</div>
               </div>
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   <button 
                     className="edit-icon-btn" 
                     onClick={() => navigate(`/users/${user.id}/edit`)}
@@ -178,6 +240,13 @@ function UserList({ token, BASE_URL }) {
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#007bff', padding: '5px' }}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button 
+                    onClick={() => handleResetPassword(user.email)}
+                    title="Send Password Reset Link"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', padding: '5px' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                   </button>
               </div>
             </div>

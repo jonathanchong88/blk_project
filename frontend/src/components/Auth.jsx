@@ -28,8 +28,7 @@ function Auth({ setToken, BASE_URL }) {
           localStorage.setItem('token', data.token);
           navigate(from, { replace: true });
         } else {
-          alert('Signup successful! Please login.');
-          setIsLoginView(true);
+        navigate('/verify-email', { state: { email: email } });
         }
         setUsername('');
         setPassword('');

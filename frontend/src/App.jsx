@@ -22,6 +22,11 @@ import WorshipBand from './components/WorshipBand';
 import WorshipRoleDetail from './components/WorshipRoleDetail';
 import WorshipSchedule from './components/WorshipSchedule';
 import WorshipServicePlanner from './components/WorshipServicePlanner';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
+import VerifyEmail from './components/VerifyEmail';
+import Salvation from './components/Salvation';
+import SalvationList from './components/SalvationList';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -63,9 +68,13 @@ function App() {
           <Routes>
             <Route path="/" element={<Home BASE_URL={BASE_URL} token={token} />} />
             <Route path="/login" element={<Auth setToken={setToken} BASE_URL={BASE_URL} />} />
+            <Route path="/forgot-password" element={<ForgotPassword BASE_URL={BASE_URL} />} />
+            <Route path="/reset-password" element={<ResetPassword BASE_URL={BASE_URL} />} />
+            <Route path="/verify-email" element={<VerifyEmail BASE_URL={BASE_URL} />} />
             <Route path="/events" element={<Events token={token} BASE_URL={BASE_URL} />} />
             <Route path="/events/past" element={<PastEvents token={token} BASE_URL={BASE_URL} />} />
             <Route path="/events/:id" element={<EventDetail token={token} BASE_URL={BASE_URL} />} />
+            <Route path="/salvation" element={<Salvation BASE_URL={BASE_URL} />} />
             
             <Route path="/events/create" element={
               <ProtectedRoute token={token}><CreateEvent token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
@@ -84,6 +93,9 @@ function App() {
             } />
             <Route path="/users/:id/edit" element={
               <ProtectedRoute token={token}><EditProfile token={token} BASE_URL={BASE_URL} currentUserRole={userRole} /></ProtectedRoute>
+            } />
+            <Route path="/salvation/admin" element={
+              <ProtectedRoute token={token}><SalvationList token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
             } />
             
             {/* Song Routes */}

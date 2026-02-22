@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ChangePassword from './ChangePassword';
 
 function EditProfile({ token, BASE_URL, currentUserRole }) {
   const [profile, setProfile] = useState({
@@ -138,6 +139,7 @@ function EditProfile({ token, BASE_URL, currentUserRole }) {
             ))}
           </select>
         </div>
+         <ChangePassword token={token} BASE_URL={BASE_URL} />
         <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
           <button type="button" onClick={() => navigate(userId ? '/users' : '/profile')} style={{ backgroundColor: '#6c757d' }}>Cancel</button>
           <button type="submit">Save Changes</button>

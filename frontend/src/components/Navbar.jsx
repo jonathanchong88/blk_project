@@ -20,6 +20,12 @@ function Navbar({ logout, token, userRole }) {
         >
           Events
         </NavLink>
+        <NavLink 
+          to="/salvation"
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          Salvation
+        </NavLink>
         {canManageUsers && (
           <NavLink 
             to="/users"
