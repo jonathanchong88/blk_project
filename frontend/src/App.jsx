@@ -27,6 +27,7 @@ import ResetPassword from './components/ResetPassword';
 import VerifyEmail from './components/VerifyEmail';
 import Salvation from './components/Salvation';
 import SalvationList from './components/SalvationList';
+import Activities from './components/Activities';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -75,6 +76,7 @@ function App() {
             <Route path="/events/past" element={<PastEvents token={token} BASE_URL={BASE_URL} />} />
             <Route path="/events/:id" element={<EventDetail token={token} BASE_URL={BASE_URL} />} />
             <Route path="/salvation" element={<Salvation BASE_URL={BASE_URL} />} />
+            <Route path="/activities" element={<Activities token={token} BASE_URL={BASE_URL} />} />
             
             <Route path="/events/create" element={
               <ProtectedRoute token={token}><CreateEvent token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
