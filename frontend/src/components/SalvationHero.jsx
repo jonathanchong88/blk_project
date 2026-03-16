@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 function SalvationHero() {
   return (
@@ -20,17 +21,30 @@ function SalvationHero() {
       <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 z-10"></div>
 
       {/* Content */}
-      <div className="relative z-20 flex flex-col items-center justify-center h-full text-center px-4">
-        <h1 className="text-7xl md:text-9xl font-black text-white tracking-tighter uppercase mb-6 drop-shadow-lg" style={{ fontFamily: 'Impact, sans-serif' }}>
-          Salvation
-        </h1>
-        <p className="text-2xl md:text-3xl text-white max-w-3xl font-light tracking-wide drop-shadow-md mb-12">
-          The beginning of a new life.
-        </p>
+      <div className="relative z-20 flex flex-col items-center justify-center h-full text-center px-6">
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.8 }}
+        >
+            <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter uppercase mb-4 drop-shadow-2xl leading-none" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              Salvation
+            </h1>
+            <div className="w-24 h-2 bg-[#FE5708] mx-auto mb-8 rounded-full"></div>
+            <p className="text-xl md:text-3xl text-gray-100 max-w-2xl font-medium tracking-tight drop-shadow-md mb-8 mx-auto">
+              Your journey from death to life begins here. A new chapter of hope, grace, and purpose.
+            </p>
+        </motion.div>
         
-        <div className="absolute bottom-10 animate-bounce">
-            <ChevronDown className="text-white w-10 h-10 opacity-80" />
-        </div>
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 1 }}
+            className="absolute bottom-12 flex flex-col items-center gap-2"
+        >
+            <span className="text-white text-xs font-bold uppercase tracking-widest opacity-60">Begin your journey</span>
+            <ChevronDown className="text-white w-8 h-8 animate-bounce opacity-80" />
+        </motion.div>
       </div>
     </div>
   );

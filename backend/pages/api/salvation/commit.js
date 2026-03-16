@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { first_name, last_name, email, decision_type } = req.body;
+  const { first_name, last_name, email, phone, decision_type } = req.body;
 
   if (!first_name || !last_name || !email || !decision_type) {
     return res.status(400).json({ message: 'Missing required fields' });
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   try {
     const { error } = await db
       .from('salvation_commitments')
-      .insert({ first_name, last_name, email, decision_type });
+      .insert({ first_name, last_name, email, phone, decision_type });
 
     if (error) throw error;
 
