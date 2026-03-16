@@ -5,6 +5,7 @@ function SalvationCommitmentForm({ BASE_URL }) {
     first_name: '',
     last_name: '',
     email: '',
+    phone: '',
     decision_type: 'I accepted Jesus today'
   });
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
@@ -83,6 +84,17 @@ function SalvationCommitmentForm({ BASE_URL }) {
               placeholder="jane@example.com"
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
+            />
+          </div>
+
+          <div className="group">
+            <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider group-focus-within:text-[#FE5708] transition-colors">Phone Number (Optional)</label>
+            <input
+              type="tel"
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FE5708] focus:border-transparent transition-all duration-200 text-gray-900 font-medium placeholder-gray-400"
+              placeholder="+1 (555) 000-0000"
+              value={formData.phone}
+              onChange={e => setFormData({...formData, phone: e.target.value})}
             />
           </div>
 

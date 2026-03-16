@@ -34,15 +34,17 @@ function SalvationList({ token, BASE_URL }) {
                     <th>Date</th>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Phone</th>
                     <th>Decision</th>
                 </tr>
             </thead>
             <tbody>
-                {commitments.length === 0 ? <tr><td colSpan="4" style={{textAlign: 'center'}}>No commitments yet.</td></tr> : commitments.map(c => (
+                {commitments.length === 0 ? <tr><td colSpan="5" style={{textAlign: 'center'}}>No commitments yet.</td></tr> : commitments.map(c => (
                     <tr key={c.id}>
                         <td>{new Date(c.created_at).toLocaleDateString()} {new Date(c.created_at).toLocaleTimeString()}</td>
                         <td>{c.first_name} {c.last_name}</td>
                         <td>{c.email}</td>
+                        <td>{c.phone || '-'}</td>
                         <td>{c.decision_type}</td>
                     </tr>
                 ))}
