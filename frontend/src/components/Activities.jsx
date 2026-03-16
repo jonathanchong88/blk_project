@@ -13,10 +13,8 @@ function Activities({ token, BASE_URL }) {
 
   // Upload modal
   const [showUpload, setShowUpload] = useState(false);
-  const [uploadPreview, setUploadPreview] = useState(null);
-  const [uploadFile, setUploadFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
+  const [uploadFiles, setUploadFiles] = useState([]); // Array of { file, preview, error, uploading, success }
+  const [batchUploading, setBatchUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef();
 
@@ -57,58 +55,102 @@ function Activities({ token, BASE_URL }) {
   };
 
   // ── File selection ───────────────────────────
-  const handleFileSelect = (file) => {
-    if (!file || !file.type.startsWith('image/')) {
-      setUploadError('Please select a valid image file.');
-      return;
-    }
-    setUploadError('');
-    setUploadFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => setUploadPreview(e.target.result);
-    reader.readAsDataURL(file);
+  const handleFilesSelect = (files) => {
+    const newFiles = Array.from(files).filter(file => {
+      if (!file.type.startsWith('image/')) {
+        alert(`${file.name} is not a valid image file and will be skipped.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (newFiles.length === 0) return;
+
+    newFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setUploadFiles(prev => [
+          ...prev,
+          { 
+            file, 
+            preview: e.target.result, 
+            id: Math.random().toString(36).substr(2, 9),
+            status: 'pending', // pending, uploading, success, error
+            error: '' 
+          }
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  const onFileInputChange = (e) => handleFileSelect(e.target.files[0]);
+  const onFileInputChange = (e) => handleFilesSelect(e.target.files);
   const onDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    handleFileSelect(e.dataTransfer.files[0]);
+    handleFilesSelect(e.dataTransfer.files);
+  };
+
+  const removeUploadFile = (id) => {
+    setUploadFiles(prev => prev.filter(f => f.id !== id));
   };
 
   const resetUpload = () => {
-    setUploadPreview(null);
-    setUploadFile(null);
-    setUploadError('');
+    setUploadFiles([]);
     setShowUpload(false);
+    setBatchUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // ── Upload submit ────────────────────────────
   const handleUpload = async () => {
-    if (!uploadFile) return;
-    setUploading(true);
-    setUploadError('');
-    try {
-      const res = await fetch(`${BASE_URL}/api/gallery`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ image: uploadPreview, filename: uploadFile.name }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
-      resetUpload();
-      // Refresh to page 1 to see the new image (newest first)
-      setSort('desc');
-      setPage(1);
-      fetchImages(1, 'desc');
-    } catch (err) {
-      setUploadError(err.message);
-    } finally {
-      setUploading(false);
+    if (uploadFiles.length === 0) return;
+    setBatchUploading(true);
+
+    const updatedFiles = [...uploadFiles];
+    
+    for (let i = 0; i < updatedFiles.length; i++) {
+        if (updatedFiles[i].status === 'success') continue;
+
+        updatedFiles[i].status = 'uploading';
+        setUploadFiles([...updatedFiles]);
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/gallery`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ 
+                    image: updatedFiles[i].preview, 
+                    filename: updatedFiles[i].file.name 
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
+            
+            updatedFiles[i].status = 'success';
+        } catch (err) {
+            updatedFiles[i].status = 'error';
+            updatedFiles[i].error = err.message;
+        }
+        setUploadFiles([...updatedFiles]);
+    }
+
+    const allFinished = updatedFiles.every(f => f.status === 'success' || f.status === 'error');
+    if (allFinished) {
+        const hasErrors = updatedFiles.some(f => f.status === 'error');
+        if (!hasErrors) {
+            setTimeout(() => {
+                resetUpload();
+                setSort('desc');
+                setPage(1);
+                fetchImages(1, 'desc');
+            }, 1000);
+        } else {
+            setBatchUploading(false);
+        }
     }
   };
 
@@ -302,7 +344,7 @@ function Activities({ token, BASE_URL }) {
               <button className="gallery-modal-close" onClick={resetUpload}>✕</button>
             </div>
 
-            {!uploadPreview ? (
+            {!uploadFiles.length ? (
               <div
                 className={`gallery-dropzone ${dragOver ? 'drag-over' : ''}`}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -320,35 +362,81 @@ function Activities({ token, BASE_URL }) {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   style={{ display: 'none' }}
                   onChange={onFileInputChange}
                 />
               </div>
             ) : (
-              <div className="upload-preview-wrap">
-                <img src={uploadPreview} alt="Preview" className="upload-preview-img" />
-                <p className="upload-preview-name">{uploadFile?.name}</p>
-                <button
-                  className="change-photo-btn"
-                  onClick={() => { setUploadPreview(null); setUploadFile(null); }}
+              <div className="upload-previews-grid">
+                {uploadFiles.map((fileObj) => (
+                  <div key={fileObj.id} className={`upload-preview-item ${fileObj.status}`}>
+                    <img src={fileObj.preview} alt="Preview" className="upload-preview-thumb" />
+                    
+                    {fileObj.status === 'pending' && (
+                        <button 
+                            className="preview-remove-btn" 
+                            onClick={() => removeUploadFile(fileObj.id)}
+                            title="Remove"
+                        >✕</button>
+                    )}
+
+                    {fileObj.status === 'uploading' && (
+                        <div className="preview-overlay">
+                            <div className="preview-spinner small"></div>
+                        </div>
+                    )}
+
+                    {fileObj.status === 'success' && (
+                        <div className="preview-overlay success">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </div>
+                    )}
+
+                    {fileObj.status === 'error' && (
+                        <div className="preview-overlay error" title={fileObj.error}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </div>
+                    )}
+                  </div>
+                ))}
+                
+                <div 
+                    className="add-more-previews" 
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Add more photos"
                 >
-                  Change photo
-                </button>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        style={{ display: 'none' }}
+                        onChange={onFileInputChange}
+                    />
+                </div>
               </div>
             )}
 
-            {uploadError && <p className="upload-error-msg">{uploadError}</p>}
-
             <div className="gallery-modal-footer">
-              <button className="modal-cancel-btn" onClick={resetUpload} disabled={uploading}>
-                Cancel
+              <button className="modal-cancel-btn" onClick={resetUpload} disabled={batchUploading}>
+                {uploadFiles.some(f => f.status === 'success') ? 'Close' : 'Cancel'}
               </button>
               <button
                 className="modal-upload-btn"
                 onClick={handleUpload}
-                disabled={!uploadFile || uploading}
+                disabled={!uploadFiles.length || batchUploading || uploadFiles.every(f => f.status === 'success')}
               >
-                {uploading ? 'Uploading…' : 'Upload'}
+                {batchUploading ? 'Uploading…' : `Upload ${uploadFiles.filter(f => f.status !== 'success').length} photo${uploadFiles.filter(f => f.status !== 'success').length !== 1 ? 's' : ''}`}
               </button>
             </div>
           </div>
