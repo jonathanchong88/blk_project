@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
+import { supabase } from './supabase';
 import './App.css';
 import Auth from './components/Auth';
 import Home from './components/Home';
@@ -52,7 +53,8 @@ function App() {
     }
   }, [token]);
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setToken(null);
     localStorage.removeItem('token');
     setUserRole(null);

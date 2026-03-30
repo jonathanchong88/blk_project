@@ -68,7 +68,7 @@ export default async function handler(req, res) {
   // POST /api/gallery  – upload a new image (auth required)
   // ──────────────────────────────────────────────
   if (req.method === 'POST') {
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     const { image, filename } = req.body;

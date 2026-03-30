@@ -13,7 +13,7 @@ export const config = {
 export default async function handler(req, res) {
     await runMiddleware(req, res, cors);
 
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     if (req.method === 'GET') {

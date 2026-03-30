@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       res.status(500).json({ error: err.message });
     }
   } else if (req.method === 'POST') {
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     const { event_id, song_id, key_note } = req.body;
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       res.status(500).json({ error: err.message });
     }
   } else if (req.method === 'PUT') {
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     const { id, key_note, sequence_number } = req.body;
@@ -102,7 +102,7 @@ export default async function handler(req, res) {
       res.status(500).json({ error: err.message });
     }
   } else if (req.method === 'DELETE') {
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
     
     const { id } = req.query;

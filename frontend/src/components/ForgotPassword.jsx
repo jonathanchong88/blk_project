@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase';
 
-function ForgotPassword({ BASE_URL }) {
+function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -15,26 +16,15 @@ function ForgotPassword({ BASE_URL }) {
     setMessage('');
 
     try {
-      const response = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage('If an account exists with this email, you will receive a password reset link.');
-        // For development convenience, we log the link to console since we don't have an email server setup
-        if (data.testLink) {
-            console.log("DEV MODE - Reset Link:", data.testLink);
-            alert("DEV MODE: Reset link logged to console.");
-        }
-      } else {
-        setError(data.message || 'Failed to request password reset');
-      }
+      if (error) throw error;
+      
+      setMessage('If an account exists with this email, you will receive a password reset link shortly.');
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

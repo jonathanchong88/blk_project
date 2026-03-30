@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       res.status(500).json({ error: err.message });
     }
   } else if (req.method === 'POST' || req.method === 'PUT') {
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     const { rehearsal_date, worship_leader_id } = req.body;

@@ -37,7 +37,7 @@ export default async function handler(req, res) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'PUT') {
-        const user = authenticateToken(req);
+        const user = await authenticateToken(req);
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
         const { title, author, locale, lyrics, image_url, video_url, music_sheet_url } = req.body;
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'DELETE') {
-        const user = authenticateToken(req);
+        const user = await authenticateToken(req);
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
         try {
