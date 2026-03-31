@@ -13,14 +13,7 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
-      - key: SUPABASE_URL
-        fromGroup: todo-app-common-prod
-      - key: SUPABASE_KEY
-        fromGroup: todo-app-common-prod
-      - key: RESEND_API_KEY
-        fromGroup: todo-app-common-prod
-      - key: SECRET_KEY
-        fromGroup: todo-app-common-prod
+      - fromGroup: todo-app-common-prod
       - key: PORT
         value: 10000
 
@@ -33,10 +26,7 @@ services:
     buildCommand: npm install && npm run build
     publishPath: dist
     envVars:
-      - key: VITE_SUPABASE_URL
-        fromGroup: todo-app-common-prod
-      - key: VITE_SUPABASE_ANON_KEY
-        fromGroup: todo-app-common-prod
+      - fromGroup: todo-app-common-prod
       - key: VITE_API_URL
         fromService:
           type: web
@@ -56,14 +46,7 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
-      - key: SUPABASE_URL
-        fromGroup: todo-app-common-dev
-      - key: SUPABASE_KEY
-        fromGroup: todo-app-common-dev
-      - key: RESEND_API_KEY
-        fromGroup: todo-app-common-dev
-      - key: SECRET_KEY
-        fromGroup: todo-app-common-dev
+      - fromGroup: todo-app-common-dev
       - key: PORT
         value: 10000
 
@@ -76,10 +59,7 @@ services:
     buildCommand: npm install && npm run build
     publishPath: dist
     envVars:
-      - key: VITE_SUPABASE_URL
-        fromGroup: todo-app-common-dev
-      - key: VITE_SUPABASE_ANON_KEY
-        fromGroup: todo-app-common-dev
+      - fromGroup: todo-app-common-dev
       - key: VITE_API_URL
         fromService:
           type: web
@@ -93,6 +73,10 @@ envVarGroups:
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: SECRET_KEY
@@ -103,6 +87,10 @@ envVarGroups:
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
         sync: false
       - key: RESEND_API_KEY
         sync: false
