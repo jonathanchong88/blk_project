@@ -7,7 +7,8 @@ const path = require('path');
 
 const requiredVars = [
   'VITE_SUPABASE_URL',
-  'VITE_SUPABASE_ANON_KEY'
+  'VITE_SUPABASE_ANON_KEY',
+  'VITE_FRONTEND_URL'
 ];
 
 // Simple helper to load .env file manually if it exists
