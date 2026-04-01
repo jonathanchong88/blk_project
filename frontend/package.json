@@ -16,7 +16,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "vite build",
+    "build": "node scripts/verify-env.js && vite build",
     "preview": "vite preview"
   },
   "eslintConfig": {
