@@ -8,13 +8,50 @@ function Auth({ setToken, BASE_URL }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoginView, setIsLoginView] = useState(true);
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
+  const checkEmailExists = async (emailToCheck) => {
+    if (isLoginView || !emailToCheck) return;
+    
+    // Simple email regex for quick validation before API call
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailToCheck)) return;
+
+    setCheckingEmail(true);
+    try {
+      const response = await fetch(`${BASE_URL}/api/auth/check-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailToCheck }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEmailExists(data.exists);
+      }
+    } catch (error) {
+      console.error('Error checking email:', error);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    if (emailExists) setEmailExists(false); // Reset exists status when typing
+  };
+
   const auth = async (e) => {
     e.preventDefault();
+    if (!isLoginView && emailExists) {
+        alert('This email is already registered. Please login instead.');
+        return;
+    }
     setLoading(true);
     
     try {
@@ -77,9 +114,15 @@ function Auth({ setToken, BASE_URL }) {
           type="email" 
           placeholder="Email" 
           value={email} 
-          onChange={e => setEmail(e.target.value)} 
+          onChange={handleEmailChange} 
+          onBlur={e => checkEmailExists(e.target.value)}
           required
         />
+        {!isLoginView && emailExists && (
+          <p style={{ color: '#ff4d4d', fontSize: '0.85rem', margin: '0 0 1rem 0', textAlign: 'left', width: '100%' }}>
+            This email is already registered. Please login instead.
+          </p>
+        )}
         <div className="password-input-wrapper">
           <input 
             type={showPassword ? "text" : "password"} 
@@ -101,7 +144,7 @@ function Auth({ setToken, BASE_URL }) {
             )}
           </button>
         </div>
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={loading || checkingEmail || (!isLoginView && emailExists)}>
           {loading ? 'Processing...' : (isLoginView ? 'Login' : 'Sign Up')}
         </button>
       </form>
