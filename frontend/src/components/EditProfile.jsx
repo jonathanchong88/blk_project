@@ -113,6 +113,26 @@ function EditProfile({ token, BASE_URL, currentUserRole }) {
   return (
     <div className="profile-container">
       <h2>Edit Profile</h2>
+      <div className="avatar-section">
+        <input 
+          type="file" 
+          id="avatar-input"
+          onChange={handleAvatarUpload} 
+          style={{ display: 'none' }} 
+          accept="image/*"
+        />
+        <div className="avatar-preview" onClick={() => document.getElementById('avatar-input').click()}>
+          {profile.avatar_url ? (
+            <img src={profile.avatar_url} alt="Profile" />
+          ) : (
+            <div className="avatar-placeholder">{profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}</div>
+          )}
+          <div className="avatar-overlay">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <span>{uploading ? 'Uploading...' : 'Change Photo'}</span>
+          </div>
+        </div>
+      </div>
       <form onSubmit={handleSubmit} className="profile-form">
         <div className="form-group">
           <label>Name</label>

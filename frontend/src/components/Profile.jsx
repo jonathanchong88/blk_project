@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 function Profile({ token, BASE_URL }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -26,6 +28,59 @@ function Profile({ token, BASE_URL }) {
     fetchProfile();
   }, [token, BASE_URL]);
 
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = async () => {
+      try {
+        // 1. Upload to storage
+        const uploadResponse = await fetch(`${BASE_URL}/api/upload`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ image: reader.result, filename: file.name }),
+        });
+
+        if (!uploadResponse.ok) throw new Error('Upload failed');
+        const uploadData = await uploadResponse.json();
+        const newAvatarUrl = uploadData.url;
+
+        // 2. Update profile with new URL
+        const profileResponse = await fetch(`${BASE_URL}/api/profile`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ ...profile, avatar_url: newAvatarUrl }),
+        });
+
+        if (profileResponse.ok) {
+          setProfile(prev => ({ ...prev, avatar_url: newAvatarUrl }));
+        } else {
+          throw new Error('Failed to update profile');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Error updating profile picture: ' + error.message);
+      } finally {
+        setUploading(false);
+      }
+    };
+  };
+
   if (loading) return <div>Loading profile...</div>;
   if (!profile) return <div>Could not load profile.</div>;
 
@@ -41,12 +96,23 @@ function Profile({ token, BASE_URL }) {
       </div>
       
       <div className="avatar-section">
-        <div className="avatar-preview">
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          style={{ display: 'none' }} 
+          accept="image/*"
+        />
+        <div className="avatar-preview" onClick={handleAvatarClick}>
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt="Profile" />
           ) : (
             <div className="avatar-placeholder">{initial}</div>
           )}
+          <div className="avatar-overlay">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <span>{uploading ? 'Uploading...' : 'Change Photo'}</span>
+          </div>
         </div>
       </div>
 
