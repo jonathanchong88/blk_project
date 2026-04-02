@@ -15,7 +15,7 @@ export async function getServerSideProps(context) {
       return { notFound: true };
     }
 
-    const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3001';
+    const frontendUrl = process.env.VITE_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
     const redirectUrl = `${frontendUrl}/events/${id}`;
 
     return {
@@ -54,13 +54,13 @@ function getOptimizedImageUrl(url) {
 
 export default function ShareEvent({ event, redirectUrl }) {
   const imageUrl = getOptimizedImageUrl(event.image_url);
-  
+
   return (
     <>
       <Head>
         <title>{event.title}</title>
         <meta name="description" content={event.description} />
-        
+
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={redirectUrl} />
