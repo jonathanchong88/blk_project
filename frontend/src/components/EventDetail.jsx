@@ -245,8 +245,9 @@ function EventDetail({ token, BASE_URL }) {
 
     const handleShare = async () => {
         try {
-            await navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard!');
+            const shareUrl = `${BASE_URL}/share/event/${id}`;
+            await navigator.clipboard.writeText(shareUrl);
+            alert('Link copied to clipboard! Share this link to see a preview on WhatsApp.');
         } catch (error) {
             console.error('Error copying link:', error);
         }
