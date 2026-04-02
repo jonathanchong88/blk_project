@@ -152,13 +152,14 @@ button:hover {
   flex-direction: column;
   padding: 2rem 1rem;
   flex-shrink: 0;
-  min-height: 100vh;
+  height: 100vh;
   position: sticky;
   top: 0;
   transition: transform 0.3s ease;
-  overflow: hidden;
+  overflow-y: auto;
   white-space: nowrap;
   z-index: 1000;
+  box-sizing: border-box;
 }
 
 .sidebar-header {

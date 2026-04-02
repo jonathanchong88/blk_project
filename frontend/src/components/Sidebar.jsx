@@ -49,7 +49,7 @@ function Sidebar({ userRole }) {
       )}
       <aside 
         className={`sidebar ${!isMenuOpen ? 'closed' : ''}`}
-        style={isMobile ? { position: 'fixed', top: 0, left: 0, height: '100%', width: isMenuOpen ? '50%' : undefined, zIndex: 1000 } : { position: 'relative', zIndex: 1000 }}
+        style={isMobile ? { position: 'fixed', top: 0, left: 0, height: '100%', width: isMenuOpen ? '50%' : undefined, zIndex: 1000 } : {}}
       >
         <div className="sidebar-header">
           <div>
