@@ -29,6 +29,7 @@ import VerifyEmail from './components/VerifyEmail';
 import Salvation from './components/Salvation';
 import SalvationList from './components/SalvationList';
 import Activities from './components/Activities';
+import Footer from './components/Footer';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -118,6 +119,7 @@ function App() {
 
           </Routes>
         </div>
+        <Footer />
       </div>
     </div>
   );
