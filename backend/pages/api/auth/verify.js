@@ -21,9 +21,17 @@ export default async function handler(req, res) {
   if (!email || !code) return res.status(400).json({ message: 'Missing fields' });
 
   try {
+    const { data: { users }, error: authError } = await db.auth.admin.listUsers();
+    
+    if (authError) throw authError;
+
+    const authUser = users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+
+    if (!authUser) return res.status(404).json({ message: 'User not found' });
+
     const { data: user, error } = await db.from('users')
         .select('id, verification_code')
-        .eq('email', email)
+        .eq('auth_id', authUser.id)
         .single();
 
     if (error || !user) return res.status(404).json({ message: 'User not found' });
