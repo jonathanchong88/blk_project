@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../supabase';
 
 function Auth({ setToken, BASE_URL }) {
+  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -14,36 +16,45 @@ function Auth({ setToken, BASE_URL }) {
   const auth = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const endpoint = isLoginView ? `${BASE_URL}/api/login` : `${BASE_URL}/api/signup`;
+    
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (isLoginView) {
-          setToken(data.token);
-          localStorage.setItem('token', data.token);
+      if (isLoginView) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        if (data.session) {
+          setToken(data.session.access_token);
+          localStorage.setItem('token', data.session.access_token);
           navigate(from, { replace: true });
-        } else {
-        navigate('/verify-email', { state: { email: email } });
         }
-        setUsername('');
-        setPassword('');
       } else {
-        const text = await response.text();
-        try {
-          const data = JSON.parse(text);
-          alert(data.message);
-        } catch {
-          alert('Request failed: ' + response.status + ' ' + response.statusText);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          alert('Please enter a valid email address.');
+          setLoading(false);
+          return;
         }
+
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { username }
+          }
+        });
+        
+        if (error) throw error;
+        
+        alert('Sign up successful! Please check your email to verify your account.');
+        setIsLoginView(true);
+        setPassword('');
       }
     } catch (error) {
-      console.error('Auth error:', error);
+      alert(error.message);
     } finally {
       setLoading(false);
     }
@@ -53,11 +64,21 @@ function Auth({ setToken, BASE_URL }) {
     <div className="auth-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
       <h1>{isLoginView ? 'Login' : 'Sign Up'}</h1>
       <form onSubmit={auth} className="auth-form">
+        {!isLoginView && (
+          <input 
+            type="text" 
+            placeholder="Username" 
+            value={username} 
+            onChange={e => setUsername(e.target.value)} 
+            required={!isLoginView}
+          />
+        )}
         <input 
-          type="text" 
-          placeholder="Username" 
-          value={username} 
-          onChange={e => setUsername(e.target.value)} 
+          type="email" 
+          placeholder="Email" 
+          value={email} 
+          onChange={e => setEmail(e.target.value)} 
+          required
         />
         <div className="password-input-wrapper">
           <input 
@@ -65,6 +86,7 @@ function Auth({ setToken, BASE_URL }) {
             placeholder="Password" 
             value={password} 
             onChange={e => setPassword(e.target.value)} 
+            required
           />
           <button 
             type="button" 
@@ -83,9 +105,16 @@ function Auth({ setToken, BASE_URL }) {
           {loading ? 'Processing...' : (isLoginView ? 'Login' : 'Sign Up')}
         </button>
       </form>
-      <button className="link-btn" onClick={() => setIsLoginView(!isLoginView)}>
-        {isLoginView ? 'Need an account? Sign Up' : 'Have an account? Login'}
-      </button>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+        {isLoginView && (
+          <button type="button" className="link-btn" onClick={() => navigate('/forgot-password')}>
+            Forgot Password?
+          </button>
+        )}
+        <button className="link-btn" onClick={() => setIsLoginView(!isLoginView)}>
+          {isLoginView ? 'Need an account? Sign Up' : 'Have an account? Login'}
+        </button>
+      </div>
     </div>
   );
 }

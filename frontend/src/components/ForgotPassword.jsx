@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase';
 
-function ForgotPassword({ BASE_URL }) {
+function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -15,26 +16,20 @@ function ForgotPassword({ BASE_URL }) {
     setMessage('');
 
     try {
-      const response = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+      const redirectToUrl = `${frontendUrl}/reset-password`;
+
+      console.log('Sending reset link with redirectTo:', redirectToUrl);
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectToUrl,
       });
 
-      const data = await response.json();
+      if (error) throw error;
 
-      if (response.ok) {
-        setMessage('If an account exists with this email, you will receive a password reset link.');
-        // For development convenience, we log the link to console since we don't have an email server setup
-        if (data.testLink) {
-            console.log("DEV MODE - Reset Link:", data.testLink);
-            alert("DEV MODE: Reset link logged to console.");
-        }
-      } else {
-        setError(data.message || 'Failed to request password reset');
-      }
+      setMessage('If an account exists with this email, you will receive a password reset link shortly.');
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -46,15 +41,15 @@ function ForgotPassword({ BASE_URL }) {
       <p style={{ fontSize: '0.9rem', color: '#666' }}>Enter your email address and we'll send you a link to reset your password.</p>
       {message && <div style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', marginBottom: '15px' }}>{message}</div>}
       {error && <div style={{ padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '15px' }}>{error}</div>}
-      
+
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Email</label>
-          <input 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ddd' }}
           />
         </div>

@@ -5,7 +5,7 @@ const { cors, runMiddleware } = require('../../middleware/cors');
 export default async function handler(req, res) {
     await runMiddleware(req, res, cors);
 
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
 
     if (req.method === 'GET') {
         try {

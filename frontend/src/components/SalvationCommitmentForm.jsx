@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Send, PartyPopper } from 'lucide-react';
+import { Send, ChevronDown, CheckCircle2 } from 'lucide-react';
 
 function SalvationCommitmentForm({ BASE_URL }) {
   const [formData, setFormData] = useState({
@@ -8,19 +8,23 @@ function SalvationCommitmentForm({ BASE_URL }) {
     last_name: '',
     email: '',
     phone: '',
-    decision_type: 'I accepted Jesus today'
+    decision_type: ''
   });
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.decision_type) {
+      alert("Please select a decision.");
+      return;
+    }
     setStatus('submitting');
 
     try {
       const response = await fetch(`${BASE_URL}/api/salvation/commit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, decision_type: formData.decision_type || 'I accepted Jesus today' })
       });
 
       if (response.ok) {
@@ -36,159 +40,122 @@ function SalvationCommitmentForm({ BASE_URL }) {
 
   if (status === 'success') {
     return (
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="py-32 px-6 bg-[#FE5708] text-white text-center flex items-center justify-center min-h-[600px]"
-      >
-        <div className="max-w-2xl mx-auto">
+      <div className="py-32 px-6 bg-zinc-50 flex items-center justify-center min-h-[600px]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="bg-white p-12 md:p-20 rounded-[2.5rem] shadow-sm max-w-2xl w-full text-center border border-zinc-200/50"
+        >
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mb-8 flex justify-center"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", delay: 0.3, duration: 0.8 }}
+            className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-8"
           >
-            <div className="bg-white/20 p-6 rounded-full backdrop-blur-md">
-                <PartyPopper size={64} className="text-white" />
-            </div>
+            <CheckCircle2 size={36} className="text-orange-500" />
           </motion.div>
-          <motion.h2 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-5xl md:text-7xl font-black mb-6 uppercase tracking-tighter"
-          >
-            Welcome Home!
-          </motion.h2>
-          <motion.p 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-xl md:text-2xl font-medium opacity-90 leading-relaxed"
-          >
-            Heaven is rejoicing, and so are we! We are so excited for your decision. One of our team members will be in touch soon with next steps and resources for your journey.
-          </motion.p>
-        </div>
-      </motion.div>
+          <h2 className="text-4xl md:text-5xl font-black mb-6 text-zinc-900 tracking-tighter uppercase">Thank You</h2>
+          <p className="text-zinc-600 font-medium text-lg leading-relaxed">We have received your decision and someone from our team will reach out to you shortly to walk this journey with you.</p>
+        </motion.div>
+      </div>
     );
   }
 
   return (
-    <div className="py-32 px-6 bg-gray-50 border-t border-gray-100 overflow-hidden">
-      <div className="max-w-4xl mx-auto">
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-white p-8 md:p-20 rounded-[3rem] shadow-2xl relative"
-        >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#FE5708] p-5 rounded-3xl shadow-xl text-white">
-                <Send size={32} />
+    <div className="py-24 px-6 bg-zinc-50 flex items-center justify-center">
+      <div className="w-full max-w-4xl">
+        <div className="bg-white border-2 border-black/5 p-8 md:p-12 rounded-[3rem] shadow-xl">
+          <h3 className="text-3xl font-black text-center mb-10">I Made a Decision</h3>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-400">First Name</label>
+                <input
+                  type="text"
+                  placeholder="Jane"
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  value={formData.first_name}
+                  onChange={e => setFormData({ ...formData, first_name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-400">Last Name</label>
+                <input
+                  type="text"
+                  placeholder="Doe"
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  value={formData.last_name}
+                  onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+                />
+              </div>
             </div>
-
-            <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-black mb-4 uppercase tracking-tighter text-gray-900">I Made a Decision</h2>
-                <div className="w-16 h-1.5 bg-[#FE5708] mx-auto rounded-full mb-6"></div>
-                <p className="text-gray-500 text-lg font-medium">We would love to hear from you and walk alongside you.</p>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase text-gray-400">Email Address</label>
+              <input
+                type="email"
+                placeholder="jane@example.com"
+                required
+                className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                value={formData.email}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
+              />
             </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="relative group">
-                  <label className="block text-xs font-bold text-gray-400 mb-3 uppercase tracking-widest group-focus-within:text-[#FE5708] transition-colors">First Name</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full pb-3 bg-transparent border-b-2 border-gray-100 focus:border-[#FE5708] outline-none transition-all duration-300 text-xl font-bold text-gray-900 placeholder-gray-200"
-                    placeholder="e.g. Jane"
-                    value={formData.first_name}
-                    onChange={e => setFormData({...formData, first_name: e.target.value})}
-                  />
-                </div>
-                <div className="relative group">
-                  <label className="block text-xs font-bold text-gray-400 mb-3 uppercase tracking-widest group-focus-within:text-[#FE5708] transition-colors">Last Name</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full pb-3 bg-transparent border-b-2 border-gray-100 focus:border-[#FE5708] outline-none transition-all duration-300 text-xl font-bold text-gray-900 placeholder-gray-200"
-                    placeholder="e.g. Doe"
-                    value={formData.last_name}
-                    onChange={e => setFormData({...formData, last_name: e.target.value})}
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-400">Phone Number (Optional)</label>
+                <input
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  value={formData.phone}
+                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="relative group">
-                  <label className="block text-xs font-bold text-gray-400 mb-3 uppercase tracking-widest group-focus-within:text-[#FE5708] transition-colors">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    className="w-full pb-3 bg-transparent border-b-2 border-gray-100 focus:border-[#FE5708] outline-none transition-all duration-300 text-xl font-bold text-gray-900 placeholder-gray-200"
-                    placeholder="jane@example.com"
-                    value={formData.email}
-                    onChange={e => setFormData({...formData, email: e.target.value})}
-                  />
-                </div>
-                <div className="relative group">
-                  <label className="block text-xs font-bold text-gray-400 mb-3 uppercase tracking-widest group-focus-within:text-[#FE5708] transition-colors">Phone Number (Optional)</label>
-                  <input
-                    type="tel"
-                    className="w-full pb-3 bg-transparent border-b-2 border-gray-100 focus:border-[#FE5708] outline-none transition-all duration-300 text-xl font-bold text-gray-900 placeholder-gray-200"
-                    placeholder="+1 (555) 000-0000"
-                    value={formData.phone}
-                    onChange={e => setFormData({...formData, phone: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="relative group pt-4">
-                <label className="block text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest group-focus-within:text-[#FE5708] transition-colors">My Decision</label>
-                <div className="grid grid-cols-1 gap-4">
-                    {['I accepted Jesus today', "I'm recommitting my life", 'I want to know more'].map((type) => (
-                        <label 
-                            key={type}
-                            className={`flex items-center p-5 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.decision_type === type ? 'border-[#FE5708] bg-[#FE5708]/5' : 'border-gray-50 hover:bg-gray-50'}`}
-                            onClick={() => setFormData({...formData, decision_type: type})}
-                        >
-                            <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center transition-colors ${formData.decision_type === type ? 'border-[#FE5708] bg-[#FE5708]' : 'border-gray-200'}`}>
-                                {formData.decision_type === type && <CheckCircle2 size={16} className="text-white" />}
-                            </div>
-                            <span className={`text-lg font-bold ${formData.decision_type === type ? 'text-gray-900' : 'text-gray-500'}`}>{type}</span>
-                        </label>
-                    ))}
-                </div>
-              </div>
-
-              <div className="pt-8">
-                <button
-                  type="submit"
-                  disabled={status === 'submitting'}
-                  className="w-full py-6 bg-black text-white font-black text-xl uppercase tracking-widest rounded-3xl hover:bg-[#FE5708] transition-all duration-500 transform hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(254,87,8,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase text-gray-400">My Decision</label>
+                <select
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  value={formData.decision_type}
+                  onChange={e => setFormData({ ...formData, decision_type: e.target.value })}
                 >
-                  {status === 'submitting' ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Submitting...
-                      </span>
-                  ) : 'Submit My Decision'}
-                </button>
+                  <option value="" disabled>Select a decision...</option>
+                  <option value="I followed Jesus today">I followed Jesus today</option>
+                  <option value="I want to learn more">I want to learn more</option>
+                  <option value="I need prayer">I need prayer</option>
+                </select>
               </div>
-              
-              <AnimatePresence>
-                {status === 'error' && (
-                  <motion.p 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-red-500 text-center font-bold px-4 pt-4"
-                  >
-                    Something went wrong. Please check your connection and try again.
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </form>
-        </motion.div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={status === 'submitting'}
+              className="w-full py-4 bg-[#B87D00] text-white font-bold rounded-xl hover:bg-[#966600] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {status === 'submitting' ? (
+                "SUBMITTING..."
+              ) : (
+                <>SUBMIT DECISION <Send size={18} /></>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {status === 'error' && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-red-500 text-center text-sm font-medium"
+                >
+                  Something went wrong. Please try again.
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       res.status(500).json({ error: err.message });
     }
   } else if (req.method === 'POST') {
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     const { name, email, phone, sex, age, avatar_url, roles } = req.body; // roles is array of role_ids
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
       res.status(500).json({ error: err.message });
     }
   } else if (req.method === 'PUT') {
-    const user = authenticateToken(req);
+    const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
     const { id, name, email, phone, sex, age, avatar_url, roles } = req.body;

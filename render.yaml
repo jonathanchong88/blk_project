@@ -1,0 +1,106 @@
+# Render Blueprint for Todo App (Dev and Prod)
+services:
+  # --- PRODUCTION SERVICES (Main Branch) ---
+
+  # Production Backend (Next.js)
+  - type: web
+    name: todo-app-backend-prod
+    env: node
+    plan: free
+    region: singapore
+    branch: main
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - fromGroup: todo-app-common-prod
+      - key: PORT
+        value: 10000
+
+  # Production Frontend (Vite)
+  - type: web
+    name: todo-app-frontend-prod
+    runtime: static
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - fromGroup: todo-app-common-prod
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: todo-app-backend-prod
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # --- DEVELOPMENT SERVICES (Develop Branch) ---
+
+  # Development Backend (Next.js)
+  - type: web
+    name: todo-app-backend-dev
+    env: node
+    plan: free # Use free tier for dev if possible
+    region: singapore
+    branch: develop
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - fromGroup: todo-app-common-dev
+      - key: PORT
+        value: 10000
+
+  # Development Frontend (Vite)
+  - type: web
+    name: todo-app-frontend-dev
+    runtime: static
+    branch: develop
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - fromGroup: todo-app-common-dev
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: todo-app-backend-dev
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+envVarGroups:
+  - name: todo-app-common-prod
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+
+  - name: todo-app-common-dev
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        sync: false
