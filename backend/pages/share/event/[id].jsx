@@ -30,8 +30,30 @@ export async function getServerSideProps(context) {
   }
 }
 
+// Helper to apply cropping parameters for optimal 1.91:1 social previews (1200x630)
+function getOptimizedImageUrl(url) {
+  if (!url) return 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=630&fit=crop';
+
+  // 1. Handle Unsplash URLs
+  if (url.includes('images.unsplash.com')) {
+    // Ensure we don't duplicate existing params, but override w, h, and fit
+    const baseUrl = url.split('?')[0];
+    return `${baseUrl}?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=630&q=80`;
+  }
+
+  // 2. Handle Supabase Storage URLs (using Image Transformation API)
+  if (url.includes('.supabase.co/storage/v1/object/public/')) {
+    // Transform /object/public/ -> /render/image/public/
+    const optimized = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+    return `${optimized}?width=1200&height=630&resize=cover`;
+  }
+
+  // 3. Fallback for other sources
+  return url;
+}
+
 export default function ShareEvent({ event, redirectUrl }) {
-  const imageUrl = event.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=630&fit=crop';
+  const imageUrl = getOptimizedImageUrl(event.image_url);
   
   return (
     <>
