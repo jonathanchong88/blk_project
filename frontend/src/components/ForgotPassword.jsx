@@ -16,13 +16,14 @@ function ForgotPassword() {
     setMessage('');
 
     try {
-      console.log(import.meta.env.VITE_FRONTEND_URL);
-      if (!import.meta.env.VITE_FRONTEND_URL) {
-        throw new Error('VITE_FRONTEND_URL is missing. Please check your environment variables.');
-      }
-      // const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      //   redirectTo: `${import.meta.env.VITE_FRONTEND_URL}/reset-password`,
-      // });
+      const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+      const redirectToUrl = `${frontendUrl}/reset-password`;
+
+      console.log('Sending reset link with redirectTo:', redirectToUrl);
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectToUrl,
+      });
 
       if (error) throw error;
 
