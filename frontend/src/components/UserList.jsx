@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function UserList({ token, BASE_URL }) {
+function UserList({ token, BASE_URL, userRole, currentUserId }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -97,6 +97,9 @@ function UserList({ token, BASE_URL }) {
 
     return matchesSearch && matchesAge;
   });
+
+  const isAdmin = ['admin', 'developer'].includes(userRole);
+  const canEditUser = (userId) => isAdmin || userId === currentUserId;
 
   return (
     <div className="user-list-container">
@@ -212,42 +215,62 @@ function UserList({ token, BASE_URL }) {
               <div style={{ flex: 1, overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
                     <div style={{ fontWeight: 'bold', fontSize: '1.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || user.username}</div>
-                    <button 
-                        onClick={() => toggleStatus(user.id, user.is_active)}
-                        style={{
-                            padding: '2px 8px',
-                            borderRadius: '10px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            backgroundColor: user.is_active !== false ? '#d4edda' : '#f8d7da',
-                            color: user.is_active !== false ? '#155724' : '#721c24',
-                            fontSize: '0.7rem',
-                            fontWeight: '600',
-                            whiteSpace: 'nowrap'
-                        }}
-                    >
-                        {user.is_active !== false ? 'Active' : 'Inactive'}
-                    </button>
+                    {isAdmin ? (
+                      <button 
+                          onClick={() => toggleStatus(user.id, user.is_active)}
+                          style={{
+                              padding: '2px 8px',
+                              borderRadius: '10px',
+                              border: 'none',
+                              cursor: 'pointer',
+                              backgroundColor: user.is_active !== false ? '#d4edda' : '#f8d7da',
+                              color: user.is_active !== false ? '#155724' : '#721c24',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              whiteSpace: 'nowrap'
+                          }}
+                      >
+                          {user.is_active !== false ? 'Active' : 'Inactive'}
+                      </button>
+                    ) : (
+                      <span
+                          style={{
+                              padding: '2px 8px',
+                              borderRadius: '10px',
+                              backgroundColor: user.is_active !== false ? '#d4edda' : '#f8d7da',
+                              color: user.is_active !== false ? '#155724' : '#721c24',
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              whiteSpace: 'nowrap'
+                          }}
+                      >
+                          {user.is_active !== false ? 'Active' : 'Inactive'}
+                      </span>
+                    )}
                 </div>
                 <div style={{ color: '#666', fontSize: '0.9rem' }}>@{user.username}</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <button 
-                    className="edit-icon-btn" 
-                    onClick={() => navigate(`/users/${user.id}/edit`)}
-                    title="Edit User"
-                    aria-label="Edit User"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#007bff', padding: '5px' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  </button>
-                  <button 
-                    onClick={() => handleResetPassword(user.email)}
-                    title="Send Password Reset Link"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', padding: '5px' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                  </button>
+                  {canEditUser(user.id) && (
+                    <button 
+                      className="edit-icon-btn" 
+                      onClick={() => navigate(`/users/${user.id}/edit`)}
+                      title="Edit User"
+                      aria-label="Edit User"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#007bff', padding: '5px' }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button 
+                      onClick={() => handleResetPassword(user.email)}
+                      title="Send Password Reset Link"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', padding: '5px' }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </button>
+                  )}
               </div>
             </div>
             

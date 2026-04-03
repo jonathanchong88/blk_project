@@ -38,6 +38,7 @@ const API_URL = `${BASE_URL}/api/todos`;
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [userRole, setUserRole] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [isApproved, setIsApproved] = useState(true); // Default to true to avoid flicker before fetch
   const navigate = useNavigate();
 
@@ -50,12 +51,14 @@ function App() {
       .then(data => {
         if (data) {
           setUserRole(data.role);
+          setCurrentUserId(data.id);
           setIsApproved(data.is_active !== false); // Handle null/undefined as true for existing users if needed, but logic says default is false
         }
       })
       .catch(err => console.error('Error fetching user profile:', err));
     } else {
       setUserRole(null);
+      setCurrentUserId(null);
       setIsApproved(true);
     }
   }, [token]);
@@ -65,6 +68,7 @@ function App() {
     setToken(null);
     localStorage.removeItem('token');
     setUserRole(null);
+    setCurrentUserId(null);
     navigate('/');
   };
 
@@ -103,7 +107,7 @@ function App() {
               <ProtectedRoute token={token}><EditProfile token={token} BASE_URL={BASE_URL} currentUserRole={userRole} /></ProtectedRoute>
             } />
             <Route path="/users" element={
-              <ProtectedRoute token={token}><UserList token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+              <ProtectedRoute token={token}><UserList token={token} BASE_URL={BASE_URL} userRole={userRole} currentUserId={currentUserId} /></ProtectedRoute>
             } />
             <Route path="/users/:id/edit" element={
               <ProtectedRoute token={token}><EditProfile token={token} BASE_URL={BASE_URL} currentUserRole={userRole} /></ProtectedRoute>
