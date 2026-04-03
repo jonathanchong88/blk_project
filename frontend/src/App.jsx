@@ -58,6 +58,9 @@ function App() {
       if (response.status === 401) {
         console.warn("401 Unauthorized detected globally. Logging out.");
         logout();
+      } else if (response.status === 403) {
+        console.warn("403 Forbidden detected. Force refreshing to resync permissions.");
+        window.location.href = '/';
       }
       return response;
     };
