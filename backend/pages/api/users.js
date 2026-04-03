@@ -10,10 +10,15 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
         try {
+            // Check if requester is authorized (admin/developer/editor)
+            if (!['admin', 'developer', 'editor'].includes(user.role)) {
+                return res.status(403).json({ message: 'Forbidden' });
+            }
             const { data, error } = await supabase
                 .from('users')
-                .select('id, username, name, age, address, phone, avatar_url')
-                .order('id', { ascending: true });
+                .select('id, username, name, age, address, phone, avatar_url, role, is_active')
+                .order('is_active', { ascending: true })
+                .order('id', { ascending: false });
 
             if (error) throw error;
             res.json(data);

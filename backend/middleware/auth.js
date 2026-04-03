@@ -16,7 +16,7 @@ const authenticateToken = async (req) => {
         // Map the UUID back to the public.users integer ID so we don't break existing routes
         const { data: publicUser, error: dbError } = await supabase
             .from('users')
-            .select('id, username, role')
+            .select('id, username, role, is_active')
             .eq('auth_id', auth_id)
             .single();
 
@@ -26,6 +26,7 @@ const authenticateToken = async (req) => {
             id: publicUser.id,           // Integer ID
             username: publicUser.username,
             role: publicUser.role,
+            is_active: publicUser.is_active,
             auth_id: auth_id             // UUID
         };
     } catch (err) {

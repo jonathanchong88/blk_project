@@ -64,8 +64,30 @@ function Auth({ setToken, BASE_URL }) {
         if (error) throw error;
         
         if (data.session) {
-          setToken(data.session.access_token);
-          localStorage.setItem('token', data.session.access_token);
+          const tempToken = data.session.access_token;
+          
+          // Before proceeding, check if the account is approved
+          try {
+            const profileRes = await fetch(`${BASE_URL}/api/profile`, {
+              headers: { 'Authorization': `Bearer ${tempToken}` }
+            });
+            
+            if (profileRes.ok) {
+              const profileData = await profileRes.json();
+              if (profileData.is_active === false) {
+                // Not approved - sign out and block
+                await supabase.auth.signOut();
+                alert('Account is under review. Please contact admin for approval.');
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (err) {
+            console.error('Error checking account status:', err);
+          }
+
+          setToken(tempToken);
+          localStorage.setItem('token', tempToken);
           navigate(from, { replace: true });
         }
       } else {

@@ -14,7 +14,7 @@ export default async function handler(req, res) {
         try {
             const { data, error } = await supabase
                 .from('users')
-                .select('username, name, age, address, phone, avatar_url')
+                .select('username, name, age, address, phone, avatar_url, role, is_active')
                 .eq('id', id)
                 .single();
 
@@ -24,11 +24,11 @@ export default async function handler(req, res) {
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'PUT') {
-        const { name, age, address, phone, avatar_url } = req.body;
+        const { name, age, address, phone, avatar_url, role } = req.body;
         try {
             const { data, error } = await supabase
                 .from('users')
-                .update({ name, age, address, phone, avatar_url })
+                .update({ name, age, address, phone, avatar_url, role })
                 .eq('id', id)
                 .select();
 
