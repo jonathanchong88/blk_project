@@ -16,8 +16,7 @@ function EditProfile({ token, BASE_URL, currentUserRole }) {
   const [roles, setRoles] = useState([]);
   const { id: userId } = useParams(); // Get userId from URL if present
   const navigate = useNavigate();
-
-  const canEditRole = ['developer', 'admin', 'editor'].includes(currentUserRole);
+  const canEditRole = ['developer', 'admin'].includes(currentUserRole);
 
   const endpoint = userId ? `${BASE_URL}/api/users/${userId}` : `${BASE_URL}/api/profile`;
 
