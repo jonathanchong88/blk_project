@@ -16,7 +16,7 @@ export default async function handler(req, res) {
             }
             const { data, error } = await supabase
                 .from('users')
-                .select('id, username, name, age, address, phone, avatar_url, role, is_active, email')
+                .select('id, username, name, age, address, phone, avatar_url, role, is_active')
                 .order('is_active', { ascending: true })
                 .order('id', { ascending: false });
 
