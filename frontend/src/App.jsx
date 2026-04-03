@@ -30,6 +30,7 @@ import Salvation from './components/Salvation';
 import SalvationList from './components/SalvationList';
 import Activities from './components/Activities';
 import Footer from './components/Footer';
+import PendingApproval from './components/PendingApproval';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -37,6 +38,7 @@ const API_URL = `${BASE_URL}/api/todos`;
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [userRole, setUserRole] = useState(null);
+  const [isApproved, setIsApproved] = useState(true); // Default to true to avoid flicker before fetch
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,11 +48,15 @@ function App() {
       })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (data) setUserRole(data.role);
+        if (data) {
+          setUserRole(data.role);
+          setIsApproved(data.is_active !== false); // Handle null/undefined as true for existing users if needed, but logic says default is false
+        }
       })
-      .catch(err => console.error('Error fetching user role:', err));
+      .catch(err => console.error('Error fetching user profile:', err));
     } else {
       setUserRole(null);
+      setIsApproved(true);
     }
   }, [token]);
 
@@ -69,7 +75,10 @@ function App() {
         <TopBar token={token} logout={logout} />
         <Hero />
         <div className="main-content">
-          <Routes>
+          {token && !isApproved ? (
+            <PendingApproval logout={logout} />
+          ) : (
+            <Routes>
             <Route path="/" element={<Home BASE_URL={BASE_URL} token={token} />} />
             <Route path="/login" element={<Auth setToken={setToken} BASE_URL={BASE_URL} />} />
             <Route path="/forgot-password" element={<ForgotPassword BASE_URL={BASE_URL} />} />
@@ -118,6 +127,7 @@ function App() {
             <Route path="/worship/planner/:id" element={<WorshipServicePlanner token={token} BASE_URL={BASE_URL} />} />
 
           </Routes>
+          )}
         </div>
         <Footer />
       </div>
