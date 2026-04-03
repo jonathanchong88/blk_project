@@ -36,6 +36,7 @@ export async function getServerSideProps(context) {
 
 // Helper to apply cropping parameters for optimal 1.91:1 social previews (1200x630)
 function getOptimizedImageUrl(url) {
+  console.log(url);
   if (!url) return 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&h=630&q=80';
 
   // 1. Handle Unsplash URLs
@@ -52,20 +53,20 @@ function getOptimizedImageUrl(url) {
 
 export default function ShareEvent({ event, redirectUrl, shareUrl }) {
   const imageUrl = getOptimizedImageUrl(event.image_url);
-  const siteTitle = 'BLK Project - Community & Events';
-  
+  const siteTitle = '活力站节目';
+
   return (
     <>
       <Head>
         <title>{`${event.title} | ${siteTitle}`}</title>
-        <meta name="description" content={event.description || 'Join us for this community event!'} />
+        <meta name="description" content={event.description || '不见不散!'} />
 
         {/* Open Graph / Facebook / WhatsApp */}
         <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="BLK Project" />
+        <meta property="og:site_name" content="活力站" />
         <meta property="og:url" content={shareUrl} />
         <meta property="og:title" content={event.title} />
-        <meta property="og:description" content={event.description || 'Join us for this community event!'} />
+        <meta property="og:description" content={event.description || '不见不散!'} />
         <meta property="og:image" content={imageUrl} />
         <meta property="og:image:secure_url" content={imageUrl} />
         <meta property="og:image:width" content="1200" />
