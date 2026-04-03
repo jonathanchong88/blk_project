@@ -15,7 +15,7 @@ const ROLE_IMAGES = {
   'default': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
 };
 
-function WorshipBand({ token, BASE_URL }) {
+function WorshipBand({ token, BASE_URL, userRole }) {
   const [team, setTeam] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('');
@@ -33,8 +33,9 @@ function WorshipBand({ token, BASE_URL }) {
   useEffect(() => {
     fetchTeam();
     fetchRoles();
-    if (token) fetchUsers();
-  }, [BASE_URL, token]);
+    const isAdmin = ['admin', 'developer', 'editor'].includes(userRole);
+    if (token && isAdmin) fetchUsers();
+  }, [BASE_URL, token, userRole]);
 
   const fetchTeam = async () => {
     try {
@@ -178,7 +179,7 @@ function WorshipBand({ token, BASE_URL }) {
                 All Members
             </button>
         </div>
-        {token && (
+        {token && ['admin', 'developer', 'editor'].includes(userRole) && (
           <button 
             className="view-all-btn"
             onClick={openAddModal}
@@ -234,7 +235,7 @@ function WorshipBand({ token, BASE_URL }) {
                     <div className="event-content">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                         <h3 style={{ marginTop: 0, marginRight: '10px' }}>{member.name}</h3>
-                        {token && (
+                        {token && ['admin', 'developer', 'editor'].includes(userRole) && (
                         <button 
                             onClick={() => handleEditClick(member)}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#007bff', padding: '0' }}

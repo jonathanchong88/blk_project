@@ -121,7 +121,7 @@ function App() {
             <Route path="/worship/songs/:id/edit" element={
               <ProtectedRoute token={token}><CreateEditSong token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
             } />
-           <Route path="/worship/band" element={<WorshipBand token={token} BASE_URL={BASE_URL} />} />
+           <Route path="/worship/band" element={<WorshipBand token={token} BASE_URL={BASE_URL} userRole={userRole} />} />
            <Route path="/worship/roles/:id" element={<WorshipRoleDetail token={token} BASE_URL={BASE_URL} />} />
             <Route path="/worship/schedule" element={<WorshipSchedule token={token} BASE_URL={BASE_URL} />} />
             <Route path="/worship/planner/:id" element={<WorshipServicePlanner token={token} BASE_URL={BASE_URL} />} />
