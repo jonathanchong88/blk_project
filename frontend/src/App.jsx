@@ -42,6 +42,30 @@ function App() {
   const [isApproved, setIsApproved] = useState(true); // Default to true to avoid flicker before fetch
   const navigate = useNavigate();
 
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setToken(null);
+    localStorage.removeItem('token');
+    setUserRole(null);
+    setCurrentUserId(null);
+    navigate('/login');
+  };
+
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        console.warn("401 Unauthorized detected globally. Logging out.");
+        logout();
+      }
+      return response;
+    };
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []); // Run setup once
+
   useEffect(() => {
     if (token) {
       fetch(`${BASE_URL}/api/profile`, {
@@ -62,15 +86,6 @@ function App() {
       setIsApproved(true);
     }
   }, [token]);
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setToken(null);
-    localStorage.removeItem('token');
-    setUserRole(null);
-    setCurrentUserId(null);
-    navigate('/');
-  };
 
   return (
     <div className="App">
