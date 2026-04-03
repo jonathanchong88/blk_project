@@ -10,7 +10,14 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
   const [maxAge, setMaxAge] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  const canViewUsers = ['admin', 'developer', 'editor'].includes(userRole);
+
   useEffect(() => {
+    if (!canViewUsers) {
+      setLoading(false);
+      return;
+    }
+    
     const fetchUsers = async () => {
       try {
         const response = await fetch(`${BASE_URL}/api/users`, {
@@ -27,9 +34,10 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
       }
     };
     fetchUsers();
-  }, [token, BASE_URL]);
+  }, [token, BASE_URL, canViewUsers]);
 
   if (loading) return <div>Loading users...</div>;
+  if (!canViewUsers) return <div style={{ padding: '20px', textAlign: 'center' }}>You do not have permission to view this page.</div>;
 
   const toggleStatus = async (userId, currentStatus) => {
     const newStatus = currentStatus === false ? true : false;
