@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 function Home({ BASE_URL, token }) {
+  const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [songs, setSongs] = useState([]);
   const [userLikes, setUserLikes] = useState(new Set());
@@ -121,7 +123,7 @@ function Home({ BASE_URL, token }) {
   const toggleLike = async (e, eventId) => {
     e.stopPropagation();
     if (!token) {
-      alert("Please login to like events");
+      alert(t('home.alert.login_to_like'));
       return;
     }
 
@@ -167,10 +169,10 @@ function Home({ BASE_URL, token }) {
             <div className="event-card" style={{ cursor: 'default', padding: '20px', borderLeft: '4px solid #007bff' }}>
                 <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    My Schedule
+                    {t('home.my_schedule')}
                 </h3>
                 {mySchedule.length === 0 ? (
-                    <p style={{ color: '#666' }}>No upcoming assignments.</p>
+                    <p style={{ color: '#666' }}>{t('home.no_upcoming_assignments')}</p>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {mySchedule.slice(0, 3).map(item => (
@@ -184,7 +186,7 @@ function Home({ BASE_URL, token }) {
                                 </span>
                             </div>
                         ))}
-                        {mySchedule.length > 3 && <button onClick={() => navigate('/worship/schedule')} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', textAlign: 'left', padding: 0 }}>View all ({mySchedule.length})</button>}
+                        {mySchedule.length > 3 && <button onClick={() => navigate('/worship/schedule')} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', textAlign: 'left', padding: 0 }}>{t('home.view_all_count')} ({mySchedule.length})</button>}
                     </div>
                 )}
             </div>
@@ -194,23 +196,23 @@ function Home({ BASE_URL, token }) {
                 <div className="event-card" style={{ cursor: 'pointer', padding: '20px', borderLeft: '4px solid #FE5708', display: 'flex', flexDirection: 'column', justifyContent: 'center' }} onClick={() => navigate('/salvation/admin')}>
                     <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px', color: '#FE5708' }}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path></svg>
-                        Salvation Decisions
+                        {t('home.salvation_decisions')}
                     </h3>
                     <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#333' }}>
                         {salvationCount}
                     </div>
-                    <p style={{ margin: 0, color: '#666' }}>Total commitments made</p>
+                    <p style={{ margin: 0, color: '#666' }}>{t('home.total_commitments')}</p>
                 </div>
             )}
         </div>
       )}
 
       <div className="section-header">
-        <h2>Upcoming Events</h2>
-        <button className="view-all-btn" onClick={() => navigate('/events')}>View All</button>
+        <h2>{t('home.upcoming_events')}</h2>
+        <button className="view-all-btn" onClick={() => navigate('/events')}>{t('home.view_all')}</button>
       </div>
       {events.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>No upcoming events at the moment.</div>
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>{t('home.no_upcoming_events')}</div>
       ) : (
         <div className="horizontal-scroll-container">
           {events.map(event => (
@@ -238,11 +240,11 @@ function Home({ BASE_URL, token }) {
       )}
 
       <div className="section-header" style={{ marginTop: '30px' }}>
-        <h2>New Songs</h2>
-        <button className="view-all-btn" onClick={() => navigate('/worship/songs')}>View All</button>
+        <h2>{t('home.new_songs')}</h2>
+        <button className="view-all-btn" onClick={() => navigate('/worship/songs')}>{t('home.view_all')}</button>
       </div>
       {songs.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>No songs available.</div>
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>{t('home.no_songs')}</div>
       ) : (
         <div className="horizontal-scroll-container">
           {songs.map(song => (
@@ -255,10 +257,10 @@ function Home({ BASE_URL, token }) {
                 <h3>
                   {song.title}
                   {isNewSong(song.created_at) && (
-                    <span style={{ backgroundColor: '#ff4757', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px', verticalAlign: 'middle' }}>New</span>
+                    <span style={{ backgroundColor: '#ff4757', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px', verticalAlign: 'middle' }}>{t('home.new_badge')}</span>
                   )}
                 </h3>
-                <p>{song.author || 'Unknown'} • {song.locale === 'zh' ? 'Chinese' : 'English'}</p>
+                <p>{song.author || t('home.unknown_author')} • {song.locale === 'zh' ? t('home.language_chinese') : t('home.language_english')}</p>
               </div>
             </div>
           ))}

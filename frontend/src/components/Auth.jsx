@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { useTranslation } from 'react-i18next';
 
 function Auth({ setToken, BASE_URL }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -49,7 +51,7 @@ function Auth({ setToken, BASE_URL }) {
   const auth = async (e) => {
     e.preventDefault();
     if (!isLoginView && emailExists) {
-        alert('This email is already registered. Please login instead.');
+        alert(t('auth.email_exists_alert'));
         return;
     }
     setLoading(true);
@@ -77,7 +79,7 @@ function Auth({ setToken, BASE_URL }) {
               if (profileData.is_active === false) {
                 // Not approved - sign out and block
                 await supabase.auth.signOut();
-                alert('Account is under review. Please contact admin for approval.');
+                alert(t('auth.account_under_review'));
                 setLoading(false);
                 return;
               }
@@ -93,7 +95,7 @@ function Auth({ setToken, BASE_URL }) {
       } else {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-          alert('Please enter a valid email address.');
+          alert(t('auth.invalid_email'));
           setLoading(false);
           return;
         }
@@ -108,7 +110,7 @@ function Auth({ setToken, BASE_URL }) {
         
         if (error) throw error;
         
-        alert('Sign up successful! Please check your email to verify your account.');
+        alert(t('auth.signup_success'));
         setIsLoginView(true);
         setPassword('');
       }
@@ -121,12 +123,12 @@ function Auth({ setToken, BASE_URL }) {
 
   return (
     <div className="auth-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
-      <h1>{isLoginView ? 'Login' : 'Sign Up'}</h1>
+      <h1>{isLoginView ? t('auth.login') : t('auth.signup')}</h1>
       <form onSubmit={auth} className="auth-form">
         {!isLoginView && (
           <input 
             type="text" 
-            placeholder="Username" 
+            placeholder={t('auth.username_placeholder')} 
             value={username} 
             onChange={e => setUsername(e.target.value)} 
             required={!isLoginView}
@@ -134,7 +136,7 @@ function Auth({ setToken, BASE_URL }) {
         )}
         <input 
           type="email" 
-          placeholder="Email" 
+          placeholder={t('auth.email_placeholder')} 
           value={email} 
           onChange={handleEmailChange} 
           onBlur={e => checkEmailExists(e.target.value)}
@@ -142,13 +144,13 @@ function Auth({ setToken, BASE_URL }) {
         />
         {!isLoginView && emailExists && (
           <p style={{ color: '#ff4d4d', fontSize: '0.85rem', margin: '0 0 1rem 0', textAlign: 'left', width: '100%' }}>
-            This email is already registered. Please login instead.
+            {t('auth.email_exists_alert')}
           </p>
         )}
         <div className="password-input-wrapper">
           <input 
             type={showPassword ? "text" : "password"} 
-            placeholder="Password" 
+            placeholder={t('auth.password_placeholder')} 
             value={password} 
             onChange={e => setPassword(e.target.value)} 
             required
@@ -167,17 +169,17 @@ function Auth({ setToken, BASE_URL }) {
           </button>
         </div>
         <button type="submit" disabled={loading || checkingEmail || (!isLoginView && emailExists)}>
-          {loading ? 'Processing...' : (isLoginView ? 'Login' : 'Sign Up')}
+          {loading ? t('auth.processing') : (isLoginView ? t('auth.login') : t('auth.signup'))}
         </button>
       </form>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
         {isLoginView && (
           <button type="button" className="link-btn" onClick={() => navigate('/forgot-password')}>
-            Forgot Password?
+            {t('auth.forgot_password')}
           </button>
         )}
         <button className="link-btn" onClick={() => setIsLoginView(!isLoginView)}>
-          {isLoginView ? 'Need an account? Sign Up' : 'Have an account? Login'}
+          {isLoginView ? t('auth.need_account_signup') : t('auth.have_account_login')}
         </button>
       </div>
     </div>
