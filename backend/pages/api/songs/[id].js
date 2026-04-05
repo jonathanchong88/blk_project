@@ -40,11 +40,11 @@ export default async function handler(req, res) {
         const user = await authenticateToken(req);
         if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
-        const { title, author, locale, lyrics, image_url, video_url, music_sheet_url } = req.body;
+        const { title, author, locale, lyrics, image_url, video_url, music_sheet_url, music_sheet_files } = req.body;
         try {
             const { data, error } = await db
                 .from('songs')
-                .update({ title, author, locale, lyrics, image_url, video_url, music_sheet_url })
+                .update({ title, author, locale, lyrics, image_url, video_url, music_sheet_url, music_sheet_files: music_sheet_files || [] })
                 .eq('id', id)
                 .select();
 

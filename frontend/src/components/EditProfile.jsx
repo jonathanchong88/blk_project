@@ -67,7 +67,7 @@ function EditProfile({ token, BASE_URL, currentUserRole }) {
         const response = await fetch(`${BASE_URL}/api/upload`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ image: reader.result, filename: file.name }),
+          body: JSON.stringify({ image: reader.result, filename: file.name, folder: 'profile' }),
         });
         if (response.ok) {
           const data = await response.json();

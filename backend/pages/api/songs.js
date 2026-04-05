@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
         // Optional: Check role permissions here if needed
 
-        const { title, author, locale, lyrics, image_url, video_url, music_sheet_url } = req.body;
+        const { title, author, locale, lyrics, image_url, video_url, music_sheet_url, music_sheet_files } = req.body;
         if (!title) {
             return res.status(400).json({ message: 'Title is required' });
         }
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         try {
             const { data, error } = await supabase
                 .from('songs')
-                .insert([{ title, author, locale, lyrics, image_url, video_url, music_sheet_url }])
+                .insert([{ title, author, locale, lyrics, image_url, video_url, music_sheet_url, music_sheet_files: music_sheet_files || [] }])
                 .select();
 
             if (error) throw error;

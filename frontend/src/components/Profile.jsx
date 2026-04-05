@@ -50,7 +50,7 @@ function Profile({ token, BASE_URL }) {
             'Content-Type': 'application/json', 
             'Authorization': `Bearer ${token}` 
           },
-          body: JSON.stringify({ image: reader.result, filename: file.name }),
+          body: JSON.stringify({ image: reader.result, filename: file.name, folder: 'profile' }),
         });
 
         if (!uploadResponse.ok) throw new Error('Upload failed');

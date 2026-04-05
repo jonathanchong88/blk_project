@@ -18,7 +18,9 @@ function EventDetail({ token, BASE_URL }) {
     const [checkInList, setCheckInList] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [userSearchQuery, setUserSearchQuery] = useState('');
-    const [showUserDropdown, setShowUserDropdown] = useState(false);
+    const [showCheckInModal, setShowCheckInModal] = useState(false);
+    const [selectedUserIds, setSelectedUserIds] = useState(new Set());
+    const [checkingIn, setCheckingIn] = useState(false);
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -353,27 +355,43 @@ function EventDetail({ token, BASE_URL }) {
         }
     };
 
-    const handleAddCheckIn = async (userId) => {
+    const toggleUserSelection = (userId) => {
+        setSelectedUserIds(prev => {
+            const next = new Set(prev);
+            next.has(userId) ? next.delete(userId) : next.add(userId);
+            return next;
+        });
+    };
+
+    const handleBulkCheckIn = async () => {
+        if (selectedUserIds.size === 0) return;
+        setCheckingIn(true);
         try {
-            const response = await fetch(`${BASE_URL}/api/events/checkin`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ event_id: id, user_id: userId, checked_in: true })
+            await Promise.all(
+                [...selectedUserIds].map(userId => {
+                    const alreadyIn = checkInList.some(c => c.id === userId && c.checked_in);
+                    return fetch(`${BASE_URL}/api/events/checkin`, {
+                        method: alreadyIn ? 'PUT' : 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ event_id: id, user_id: userId, checked_in: !alreadyIn })
+                    });
+                })
+            );
+            // Refresh list
+            const checkInRes = await fetch(`${BASE_URL}/api/events/checkin?event_id=${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-            
-            if (response.ok) {
-                // Refresh check-in list
-                const checkInRes = await fetch(`${BASE_URL}/api/events/checkin?event_id=${id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (checkInRes.ok) {
-                    setCheckInList(await checkInRes.json());
-                }
-                setShowUserDropdown(false);
-                setUserSearchQuery('');
+            if (checkInRes.ok) {
+                const updated = await checkInRes.json();
+                setCheckInList(updated.filter(u => u.checked_in));
             }
+            setSelectedUserIds(new Set());
+            setShowCheckInModal(false);
+            setUserSearchQuery('');
         } catch (error) {
-            console.error('Error adding check-in:', error);
+            console.error('Error bulk check-in:', error);
+        } finally {
+            setCheckingIn(false);
         }
     };
 
@@ -455,84 +473,30 @@ function EventDetail({ token, BASE_URL }) {
                     </div>
                     
                     <div style={{ padding: '20px' }}>
-                        <div style={{ marginBottom: '15px', position: 'relative' }}>
-                        <div 
-                            onClick={() => isEventDay && setShowUserDropdown(!showUserDropdown)}
-                            style={{ 
-                                padding: '10px', 
-                                borderRadius: '4px', 
-                                border: '1px solid #ddd', 
+                        <div style={{ marginBottom: '15px' }}>
+                        <button
+                            onClick={() => isEventDay && setShowCheckInModal(true)}
+                            disabled={!isEventDay}
+                            title={!isEventDay ? 'Check-in is only available on the event day' : ''}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                borderRadius: '4px',
+                                border: '1px solid #ddd',
                                 cursor: isEventDay ? 'pointer' : 'not-allowed',
                                 backgroundColor: isEventDay ? 'white' : '#f9f9f9',
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                opacity: isEventDay ? 1 : 0.6
+                                opacity: isEventDay ? 1 : 0.6,
+                                fontSize: '1rem',
+                                color: '#888',
                             }}
-                            title={!isEventDay ? "Check-in is only available on the event day" : ""}
                         >
-                            <span style={{ color: '#888' }}>+ Add / Check-in User</span>
+                            <span>+ Add / Check-in User</span>
                             <span style={{ fontSize: '0.8rem' }}>▼</span>
+                        </button>
                         </div>
-
-                        {showUserDropdown && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '100%',
-                                left: 0,
-                                right: 0,
-                                backgroundColor: 'white',
-                                border: '1px solid #ddd',
-                                borderRadius: '4px',
-                                zIndex: 10,
-                                maxHeight: '200px',
-                                overflowY: 'auto',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                marginTop: '5px'
-                            }}>
-                                <div style={{ padding: '8px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, background: 'white' }}>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search user..." 
-                                        value={userSearchQuery}
-                                        onChange={(e) => setUserSearchQuery(e.target.value)}
-                                        onClick={(e) => e.stopPropagation()}
-                                        style={{ width: '100%', padding: '8px', border: '1px solid #eee', borderRadius: '4px', boxSizing: 'border-box', outline: 'none' }}
-                                        autoFocus
-                                    />
-                                </div>
-                                {allUsers.filter(u => (u.name || u.username).toLowerCase().includes(userSearchQuery.toLowerCase())).map(user => {
-                                    const isCheckedIn = checkInList.some(c => c.id === user.id && c.checked_in);
-                                    return (
-                                        <div 
-                                            key={user.id} 
-                                            onClick={() => isEventDay && !isCheckedIn && handleAddCheckIn(user.id)}
-                                            style={{
-                                                padding: '10px',
-                                                cursor: (isCheckedIn || !isEventDay) ? 'default' : 'pointer',
-                                                borderBottom: '1px solid #f5f5f5',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '10px',
-                                                opacity: isCheckedIn ? 0.5 : 1,
-                                                backgroundColor: isCheckedIn ? '#f9f9f9' : 'white'
-                                            }}
-                                            onMouseEnter={(e) => !isCheckedIn && (e.currentTarget.style.backgroundColor = '#f0f7ff')}
-                                            onMouseLeave={(e) => !isCheckedIn && (e.currentTarget.style.backgroundColor = 'white')}
-                                        >
-                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, fontSize: '0.8rem', color: '#666', fontWeight: 'bold' }}>
-                                                {user.avatar_url ? <img src={user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user.name || user.username).charAt(0).toUpperCase()}
-                                            </div>
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: '500' }}>{user.name || user.username}</div>
-                                            </div>
-                                            {isCheckedIn && <span style={{ fontSize: '0.8rem', color: 'green' }}>Checked In</span>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
 
                     {checkInList.length === 0 ? <p style={{ color: '#666' }}>No attendees yet.</p> : (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '10px' }}>
@@ -717,7 +681,129 @@ function EventDetail({ token, BASE_URL }) {
                     </div>
                 </div>
             )}
-            
+
+            {/* ── Check-in User Modal (multi-select) ── */}
+            {showCheckInModal && (
+                <div
+                    style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}
+                    onClick={() => { setShowCheckInModal(false); setUserSearchQuery(''); setSelectedUserIds(new Set()); }}
+                >
+                    <div
+                        style={{ backgroundColor: 'white', borderRadius: '10px', width: '90%', maxWidth: '480px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', overflow: 'hidden' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #eee' }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#2c3e50' }}>Add / Check-in Users</h3>
+                                {selectedUserIds.size > 0 && (
+                                    <span style={{ fontSize: '0.78rem', color: '#1565c0' }}>{selectedUserIds.size} selected</span>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => { setShowCheckInModal(false); setUserSearchQuery(''); setSelectedUserIds(new Set()); }}
+                                style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#888', lineHeight: 1, padding: '0 4px' }}
+                            >×</button>
+                        </div>
+                        {/* Search */}
+                        <div style={{ padding: '12px 16px', borderBottom: '1px solid #eee' }}>
+                            <input
+                                type="text"
+                                placeholder="Search user..."
+                                value={userSearchQuery}
+                                onChange={e => setUserSearchQuery(e.target.value)}
+                                autoFocus
+                                style={{ width: '100%', padding: '9px 12px', border: '1px solid #ddd', borderRadius: '6px', boxSizing: 'border-box', fontSize: '0.95rem', outline: 'none' }}
+                            />
+                        </div>
+                        {/* User List */}
+                        <div style={{ overflowY: 'auto', flex: 1 }}>
+                            {allUsers
+                                .filter(u => (u.name || u.username).toLowerCase().includes(userSearchQuery.toLowerCase()))
+                                .map(user => {
+                                    const isCheckedIn = checkInList.some(c => c.id === user.id && c.checked_in);
+                                    const isSelected = selectedUserIds.has(user.id);
+                                    // If checked-in and selected → will be removed (red)
+                                    // If not checked-in and selected → will be added (blue)
+                                    const willRemove = isCheckedIn && isSelected;
+                                    const willAdd = !isCheckedIn && isSelected;
+                                    return (
+                                        <div
+                                            key={user.id}
+                                            onClick={() => toggleUserSelection(user.id)}
+                                            style={{
+                                                padding: '12px 16px',
+                                                cursor: 'pointer',
+                                                borderBottom: '1px solid #f5f5f5',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                                backgroundColor: willRemove ? '#fff0f0' : willAdd ? '#e8f0fe' : isCheckedIn ? '#f6fef6' : 'white',
+                                                transition: 'background-color 0.15s',
+                                            }}
+                                            onMouseEnter={e => { if (!isSelected) e.currentTarget.style.backgroundColor = isCheckedIn ? '#ffe8e8' : '#f0f7ff'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = willRemove ? '#fff0f0' : willAdd ? '#e8f0fe' : isCheckedIn ? '#f6fef6' : 'white'; }}
+                                        >
+                                            {/* Checkbox */}
+                                            <div style={{
+                                                width: '20px', height: '20px', borderRadius: '4px', flexShrink: 0,
+                                                border: willRemove ? '2px solid #e53e3e' : willAdd ? '2px solid #1565c0' : isCheckedIn ? '2px solid #4caf50' : '2px solid #ccc',
+                                                backgroundColor: willRemove ? '#e53e3e' : willAdd ? '#1565c0' : isCheckedIn ? '#4caf50' : 'white',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                pointerEvents: 'none',
+                                            }}>
+                                                {(isSelected || isCheckedIn) && <span style={{ color: 'white', fontSize: '13px', lineHeight: 1 }}>{willRemove ? '✕' : '✓'}</span>}
+                                            </div>
+                                            {/* Avatar */}
+                                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#e3f2fd', color: '#1565c0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, fontWeight: 'bold', fontSize: '0.9rem' }}>
+                                                {user.avatar_url
+                                                    ? <img src={user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    : (user.name || user.username).charAt(0).toUpperCase()}
+                                            </div>
+                                            <div style={{ flex: 1, fontWeight: '500', fontSize: '0.95rem', textDecoration: willRemove ? 'line-through' : 'none', color: willRemove ? '#999' : 'inherit' }}>{user.name || user.username}</div>
+                                            {willRemove && <span style={{ fontSize: '0.75rem', color: '#e53e3e', fontWeight: '600', whiteSpace: 'nowrap' }}>Will uncheck</span>}
+                                            {isCheckedIn && !isSelected && <span style={{ fontSize: '0.75rem', color: '#4caf50', fontWeight: '600', whiteSpace: 'nowrap' }}>✓ Checked In</span>}
+                                        </div>
+                                    );
+                                })
+                            }
+                        </div>
+                        {/* Footer */}
+                        <div style={{ padding: '12px 16px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                            <button
+                                onClick={() => { setShowCheckInModal(false); setUserSearchQuery(''); setSelectedUserIds(new Set()); }}
+                                style={{ padding: '8px 18px', backgroundColor: '#f0f0f0', color: '#555', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' }}
+                            >Cancel</button>
+                            <button
+                                onClick={handleBulkCheckIn}
+                                disabled={selectedUserIds.size === 0 || checkingIn}
+                                style={{
+                                    padding: '8px 20px',
+                                    backgroundColor: selectedUserIds.size === 0 ? '#ccc'
+                                        : [...selectedUserIds].some(uid => checkInList.some(c => c.id === uid && c.checked_in)) && [...selectedUserIds].every(uid => checkInList.some(c => c.id === uid && c.checked_in)) ? '#e53e3e'
+                                        : '#1565c0',
+                                    color: 'white', border: 'none', borderRadius: '6px',
+                                    cursor: selectedUserIds.size === 0 ? 'not-allowed' : 'pointer',
+                                    fontSize: '0.9rem', fontWeight: '600',
+                                    minWidth: '150px',
+                                }}
+                            >
+                                {(() => {
+                                    if (checkingIn) return 'Saving…';
+                                    if (selectedUserIds.size === 0) return 'Confirm';
+                                    const toAdd = [...selectedUserIds].filter(uid => !checkInList.some(c => c.id === uid && c.checked_in)).length;
+                                    const toRemove = [...selectedUserIds].filter(uid => checkInList.some(c => c.id === uid && c.checked_in)).length;
+                                    const parts = [];
+                                    if (toAdd > 0) parts.push(`+${toAdd}`);
+                                    if (toRemove > 0) parts.push(`−${toRemove}`);
+                                    return `Confirm (${parts.join(' / ')})`;
+                                })()}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="attendees-section">
                 <h3>RSVPs ({attendees.length})</h3>
                 {attendees.length === 0 ? (

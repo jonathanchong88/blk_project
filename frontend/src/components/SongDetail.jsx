@@ -53,43 +53,116 @@ function SongDetail({ token, BASE_URL }) {
     return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
   };
 
-  const isImage = (url) => {
-    return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(url);
+  // Extract the MIME type embedded in our proxy URL (?type=...)
+  const getMimeFromUrl = (url) => {
+    try {
+      const params = new URLSearchParams(url.split('?')[1] || '');
+      return decodeURIComponent(params.get('type') || '');
+    } catch { return ''; }
   };
 
-  const handleDownload = async (e) => {
+  const isImage = (url) => {
+    if (!url) return false;
+    const mime = getMimeFromUrl(url);
+    if (mime) return mime.startsWith('image/');
+    return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/i.test(url) && !url.includes('download=1');
+  };
+
+  const isPdf = (url) => {
+    if (!url) return false;
+    const mime = getMimeFromUrl(url);
+    if (mime) return mime === 'application/pdf';
+    return /\.pdf$/i.test(url);
+  };
+
+  const isOfficeDoc = (url) => {
+    if (!url) return false;
+    const mime = getMimeFromUrl(url);
+    if (mime) return [
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ].includes(mime);
+    return /\.(doc|docx|ppt|pptx|xls|xlsx)$/i.test(url);
+  };
+
+  // Strip download flag so the proxy serves inline, not as an attachment
+  const getInlineUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `${BASE_URL}${url.replace('&download=1', '').replace('?download=1&', '?').replace('?download=1', '')}`;
+  };
+
+  const renderMusicSheetPreview = (url) => {
+    const fullInlineUrl = getInlineUrl(url);
+    if (isImage(url)) {
+      return (
+        <img
+          src={fullInlineUrl}
+          alt="Music Sheet"
+          style={{ maxWidth: '100%', borderRadius: '4px', border: '1px solid #ddd' }}
+        />
+      );
+    }
+    if (isPdf(url)) {
+      return (
+        <iframe
+          src={fullInlineUrl}
+          title="PDF Preview"
+          style={{ width: '100%', height: '600px', border: '1px solid #ddd', borderRadius: '4px' }}
+        />
+      );
+    }
+    if (isOfficeDoc(url)) {
+      // Google Docs Viewer supports DOC, DOCX, PPT, PPTX, XLS, XLSX
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fullInlineUrl)}&embedded=true`;
+      return (
+        <iframe
+          src={viewerUrl}
+          title="Document Preview"
+          style={{ width: '100%', height: '600px', border: '1px solid #ddd', borderRadius: '4px' }}
+        />
+      );
+    }
+    // Unknown type — show a download prompt
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', background: '#f9f9f9', borderRadius: '4px', color: '#666' }}>
+        Preview not supported for this file type.
+      </div>
+    );
+  };
+
+  const handleDownload = async (e, sheetUrl, sheetName) => {
     e.preventDefault();
-    if (!song.music_sheet_url) return;
+    const targetUrl = sheetUrl || song.music_sheet_url;
+    if (!targetUrl) return;
+
+    // Build the absolute URL for fetching
+    const fetchUrl = targetUrl.startsWith('http') ? targetUrl : `${BASE_URL}${targetUrl}`;
 
     try {
-      const response = await fetch(song.music_sheet_url);
+      const response = await fetch(fetchUrl);
       if (!response.ok) throw new Error('Network response was not ok');
       const blob = await response.blob();
-      
-      let filename = song.music_sheet_url.split('/').pop().split('?')[0];
-      try {
-          filename = decodeURIComponent(filename);
-      } catch (e) {
-          // ignore
-      }
 
-      // Try to use the File System Access API to show a "Save As" dialog
+      let filename = sheetName || targetUrl.split('/').pop().split('?')[0];
+      try { filename = decodeURIComponent(filename); } catch (_) { /* ignore */ }
+
       if (window.showSaveFilePicker) {
         try {
-          const handle = await window.showSaveFilePicker({
-            suggestedName: filename,
-          });
+          const handle = await window.showSaveFilePicker({ suggestedName: filename });
           const writable = await handle.createWritable();
           await writable.write(blob);
           await writable.close();
           return;
         } catch (err) {
-          if (err.name === 'AbortError') return; // User cancelled
-          // Fallback if API fails
+          if (err.name === 'AbortError') return;
         }
       }
 
-      // Fallback: Create a link and click it
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
@@ -97,14 +170,10 @@ function SongDetail({ token, BASE_URL }) {
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }, 100);
+      setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
     } catch (error) {
       console.error('Download failed:', error);
-      // Last resort: open in new tab
-      window.open(song.music_sheet_url, '_blank');
+      window.open(fetchUrl, '_blank');
     }
   };
 
@@ -131,37 +200,84 @@ function SongDetail({ token, BASE_URL }) {
           )}
         </div>
       </div>
-      
+
       {song.image_url && (
         <div className="event-detail-header" style={{ backgroundImage: `url(${song.image_url})`, height: '200px' }}></div>
       )}
-      
+
       <div className="event-detail-content">
         <h1>{song.title}</h1>
         <p className="event-meta">By {song.author || 'Unknown'} • {song.locale === 'zh' ? 'Chinese' : 'English'}</p>
-        
+
         {song.video_url && getYoutubeEmbedUrl(song.video_url) && (
           <div style={{ margin: '20px 0', position: 'relative', paddingBottom: '56.25%', height: 0 }}>
             <iframe src={getYoutubeEmbedUrl(song.video_url)} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} frameBorder="0" allowFullScreen title="Song Video"></iframe>
           </div>
         )}
 
-        {song.music_sheet_url && (
-          <div style={{ marginTop: '20px', padding: '20px', background: '#fff', border: '1px solid #eee', borderRadius: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-              <h3 style={{ margin: 0 }}>Music Sheet</h3>
-              <a href={song.music_sheet_url} onClick={handleDownload} className="icon-btn" title="Download Music Sheet" style={{ display: 'inline-flex', textDecoration: 'none', color: '#333', width: 'auto', padding: '8px 12px', borderRadius: '20px', border: '1px solid #ddd', alignItems: 'center', cursor: 'pointer' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span style={{ marginLeft: '5px', fontSize: '0.9rem', fontWeight: '600' }}>Download</span>
-              </a>
+        {/* Music Sheets — new multi-file format */}
+        {(() => {
+          // Support both new array format and legacy single URL
+          const sheets = Array.isArray(song.music_sheet_files) && song.music_sheet_files.length > 0
+            ? song.music_sheet_files
+            : song.music_sheet_url
+              ? [{ name: 'Music Sheet', url: song.music_sheet_url, type: '' }]
+              : [];
+
+          if (sheets.length === 0) return null;
+
+          return (
+            <div style={{ marginTop: '20px' }}>
+              <h3 style={{ marginBottom: '12px' }}>Music Sheets</h3>
+              {sheets.map((sheet, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    marginBottom: '20px',
+                    padding: '20px',
+                    background: '#fff',
+                    border: '1px solid #eee',
+                    borderRadius: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+                      {sheet.name || `Sheet ${idx + 1}`}
+                    </h4>
+                    <a
+                      href={sheet.url.startsWith('http') ? sheet.url : `${BASE_URL}${sheet.url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="icon-btn"
+                      title="Download"
+                      style={{
+                        display: 'inline-flex',
+                        textDecoration: 'none',
+                        color: '#333',
+                        width: 'auto',
+                        padding: '8px 12px',
+                        borderRadius: '20px',
+                        border: '1px solid #ddd',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                      onClick={e => { e.preventDefault(); handleDownload(e, sheet.url, sheet.name); }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      <span style={{ marginLeft: '5px', fontSize: '0.85rem', fontWeight: '600' }}>Download</span>
+                    </a>
+                  </div>
+                  {renderMusicSheetPreview(sheet.url)}
+                </div>
+              ))}
             </div>
-            {isImage(song.music_sheet_url) ? (
-              <img src={song.music_sheet_url} alt="Music Sheet" style={{ maxWidth: '100%', borderRadius: '4px', border: '1px solid #ddd' }} />
-            ) : (
-              <div style={{ padding: '20px', textAlign: 'center', background: '#f9f9f9', borderRadius: '4px', color: '#666' }}>Preview not available. Please download to view.</div>
-            )}
-          </div>
-        )}
+          );
+        })()}
 
         {song.lyrics && (
           <div className="event-description" style={{ whiteSpace: 'pre-wrap', marginTop: '20px', padding: '20px', background: '#f9f9f9', borderRadius: '8px' }}>{song.lyrics}</div>

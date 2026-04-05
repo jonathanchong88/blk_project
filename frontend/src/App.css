@@ -1751,3 +1751,113 @@ button:hover {
   display: block;
 }
 
+/* ── Salvation Form (scoped overrides to beat global input/button/label rules) ── */
+.salvation-form-root {
+  background: #0a0a0a;
+  padding: 100px 24px;
+}
+
+.salvation-form-root input,
+.salvation-form-root select,
+.salvation-form-root textarea {
+  all: unset;
+  display: block;
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: #fff !important;
+  font-size: 0.95rem;
+  font-family: inherit;
+  line-height: 1.5;
+  transition: border-color 0.25s, background 0.25s;
+  box-sizing: border-box;
+  margin-right: 0;
+}
+
+.salvation-form-root input::placeholder,
+.salvation-form-root textarea::placeholder {
+  color: rgba(255,255,255,0.25) !important;
+}
+
+.salvation-form-root input:focus,
+.salvation-form-root select:focus {
+  border-color: rgba(184,125,0,0.7) !important;
+  background: rgba(255,255,255,0.07) !important;
+  outline: none !important;
+}
+
+.salvation-form-root label {
+  display: block !important;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 8px;
+}
+
+.salvation-form-root button {
+  all: unset;
+  cursor: pointer;
+}
+
+.salvation-decision-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  width: 100%;
+}
+
+.salvation-decision-card.selected {
+  background: rgba(184,125,0,0.1);
+  border-color: rgba(184,125,0,0.55);
+}
+
+.salvation-decision-card:hover:not(.selected) {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.salvation-submit-btn {
+  all: unset;
+  cursor: pointer;
+  width: 100%;
+  padding: 18px !important;
+  background: linear-gradient(135deg, #B87D00, #f5c842) !important;
+  color: #0a0a0a !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase !important;
+  border-radius: 14px !important;
+  box-shadow: 0 0 40px rgba(184,125,0,0.25);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px;
+  transition: opacity 0.2s, transform 0.15s;
+  margin-top: 8px;
+  box-sizing: border-box;
+}
+
+.salvation-submit-btn:hover {
+  opacity: 0.92;
+  transform: scale(1.01);
+}
+
+.salvation-submit-btn:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+

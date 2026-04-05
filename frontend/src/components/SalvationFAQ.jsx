@@ -1,56 +1,67 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-const faqs = [
-  {
-    question: "WHAT DOES IT MEAN TO BE SAVED?",
-    answer: "To be saved means to be rescued from the penalty of sin and brought into a relationship with God through Jesus Christ."
-  },
-  {
-    question: "DO I HAVE TO BE PERFECT?",
-    answer: "No. Salvation is a gift of grace, not a reward for perfection. We are saved by faith, not by our own works."
-  },
-  {
-    question: "WHAT IF I MESS UP AGAIN?",
-    answer: "God's grace is sufficient. When we stumble, we can confess our sins, and He is faithful to forgive us and cleanse us."
-  },
-  {
-    question: "HOW DO I GROW IN MY FAITH?",
-    answer: "Read the Bible, pray, join a community of believers, and serve others. These habits help deepen your relationship with God."
-  }
-];
-
-function FAQItem({ question, answer }) {
-  const [isOpen, setIsOpen] = useState(false);
-
+function FAQItem({ question, answer, index }) {
+  const [open, setOpen] = useState(false);
   return (
-    <motion.div 
-      layout
-      className="border-2 border-black/5 rounded-2xl mb-4 bg-white overflow-hidden shadow-sm hover:border-[#B87D00]/30 transition-colors duration-300"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        overflow: 'hidden',
+      }}
     >
       <button
-        className="w-full py-6 px-8 flex justify-between items-center text-left focus:outline-none group/btn"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '28px 0',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left',
+          gap: '24px',
+        }}
       >
-        <span className="text-sm md:text-base font-bold text-gray-900 uppercase tracking-widest">{question}</span>
+        <span style={{ color: open ? '#f5c842' : '#fff', fontWeight: 600, fontSize: '1rem', lineHeight: 1.5, transition: 'color 0.3s' }}>
+          {question}
+        </span>
         <motion.div
-          animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className={`p-2 rounded-full transition-colors duration-300 ${isOpen ? 'bg-gray-100' : 'group-hover/btn:bg-gray-50'}`}
+          animate={{ rotate: open ? 45 : 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            width: '32px', height: '32px', borderRadius: '50%',
+            background: open ? 'rgba(184,125,0,0.2)' : 'rgba(255,255,255,0.05)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)',
+            transition: 'background 0.3s',
+          }}
         >
-          <Plus className={`w-5 h-5 ${isOpen ? 'text-gray-400' : 'text-[#B87D00]'}`} />
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <line x1="7" y1="1" x2="7" y2="13" stroke={open ? '#f5c842' : 'rgba(255,255,255,0.6)'} strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="1" y1="7" x2="13" y2="7" stroke={open ? '#f5c842' : 'rgba(255,255,255,0.6)'} strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
         </motion.div>
       </button>
-      <AnimatePresence>
-        {isOpen && (
+
+      <AnimatePresence initial={false}>
+        {open && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
+            animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="pb-8 px-8 pt-0 text-gray-500 text-base leading-relaxed">{answer}</p>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.95rem', lineHeight: 1.8, paddingBottom: '28px', margin: 0 }}>
+              {answer}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -59,45 +70,52 @@ function FAQItem({ question, answer }) {
 }
 
 function SalvationFAQ() {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
+  const { t } = useTranslation();
 
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
-  };
+  const faqs = [
+    {
+      question: t('salvation.faq.q1'),
+      answer: t('salvation.faq.a1'),
+    },
+    {
+      question: t('salvation.faq.q2'),
+      answer: t('salvation.faq.a2'),
+    },
+    {
+      question: t('salvation.faq.q3'),
+      answer: t('salvation.faq.a3'),
+    },
+    {
+      question: t('salvation.faq.q4'),
+      answer: t('salvation.faq.a4'),
+    },
+    {
+      question: t('salvation.faq.q5'),
+      answer: t('salvation.faq.a5'),
+    },
+  ];
 
   return (
-    <div className="py-24 px-6 bg-gray-50">
-      <div className="max-w-3xl mx-auto">
+    <div style={{ background: '#0f0f0f', padding: '120px 24px' }}>
+      <div style={{ maxWidth: '760px', margin: '0 auto' }}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-16"
+          transition={{ duration: 0.8 }}
+          style={{ textAlign: 'center', marginBottom: '64px' }}
         >
-            <h2 className="text-3xl md:text-5xl font-black mb-6 text-black tracking-tighter uppercase">Common Questions</h2>
-            <div className="w-12 h-1 bg-[#B87D00] mx-auto rounded-full"></div>
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#B87D00', marginBottom: '16px' }}>{t('salvation.faq.eyebrow')}</p>
+          <h2 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', textTransform: 'uppercase', margin: 0 }}>
+            {t('salvation.faq.title')}
+          </h2>
         </motion.div>
 
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-50px" }}
-        >
-          {faqs.map((faq, index) => (
-            <motion.div key={index} variants={item}>
-              <FAQItem question={faq.question} answer={faq.answer} />
-            </motion.div>
+        <div>
+          {faqs.map((faq, i) => (
+            <FAQItem key={i} question={faq.question} answer={faq.answer} index={i} />
           ))}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
