@@ -55,12 +55,12 @@ export default async function handler(req, res) {
 
       const drive = getDriveService();
 
-      if (!drive || !process.env.GOOGLE_DRIVE_FOLDER_ID) {
+      if (!drive || !process.env.GOOGLE_DRIVE_HOME_FOLDER_ID) {
         return res.status(500).json({ message: "Google Drive is not configured." });
       }
 
       const response = await drive.files.list({
-        q: `'${process.env.GOOGLE_DRIVE_FOLDER_ID}' in parents and trashed = false`,
+        q: `'${process.env.GOOGLE_DRIVE_HOME_FOLDER_ID}' in parents and trashed = false`,
         fields: 'files(id, name, createdTime, size)',
         pageSize: 1000,
         orderBy: sortOrder === 'desc' ? 'createdTime desc' : 'createdTime asc'
@@ -116,7 +116,7 @@ export default async function handler(req, res) {
       const filePath = `${Date.now()}_${safe}`;
 
       const drive = getDriveService();
-      if (!drive || !process.env.GOOGLE_DRIVE_FOLDER_ID) {
+      if (!drive || !process.env.GOOGLE_DRIVE_HOME_FOLDER_ID) {
         return res.status(500).json({ message: "Google Drive is not configured." });
       }
 

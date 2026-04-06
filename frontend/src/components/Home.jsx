@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePushNotifications } from '../hooks/usePushNotifications';
+
 
 function Home({ BASE_URL, token }) {
   const { t } = useTranslation();
@@ -11,6 +13,17 @@ function Home({ BASE_URL, token }) {
   const [mySchedule, setMySchedule] = useState([]);
   const [salvationCount, setSalvationCount] = useState(0);
   const navigate = useNavigate();
+  const { permission, subscribeToPush } = usePushNotifications();
+
+  useEffect(() => {
+    if (token && permission === 'default') {
+      // Small delay so it doesn't pop up INSTANTLY upon rendering
+      const timer = setTimeout(() => {
+        subscribeToPush(token, BASE_URL);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [token, permission, subscribeToPush]);
 
   useEffect(() => {
     const fetchEvents = async () => {

@@ -1,6 +1,13 @@
 const supabase = require('../../db');
 const { authenticateToken } = require('../../middleware/auth');
 const { cors, runMiddleware } = require('../../middleware/cors');
+const webpush = require('web-push');
+
+webpush.setVapidDetails(
+    'mailto:demo@example.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
 
 export default async function handler(req, res) {
     await runMiddleware(req, res, cors);
@@ -62,7 +69,33 @@ export default async function handler(req, res) {
                 .select();
 
             if (error) throw error;
-            res.status(201).json(data[0]);
+            const newEvent = data[0];
+
+            try {
+                const { data: subscriptions } = await supabase
+                    .from('push_subscriptions')
+                    .select('*');
+
+                if (subscriptions && subscriptions.length > 0) {
+                    const payload = JSON.stringify({
+                        title: `New Event: ${newEvent.title}`,
+                        body: newEvent.description || 'A new event was just created.',
+                        url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/?event=${newEvent.id}`
+                    });
+
+                    await Promise.all(subscriptions.map(sub => 
+                        webpush.sendNotification(sub.subscription, payload).catch(err => {
+                            if (err.statusCode === 410) {
+                                supabase.from('push_subscriptions').delete().eq('id', sub.id).then();
+                            }
+                        })
+                    ));
+                }
+            } catch (pushErr) {
+                console.error("Failed to send push notifications", pushErr);
+            }
+
+            res.status(201).json(newEvent);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
