@@ -5,8 +5,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
   'https://blk-project-frontend-dev.onrender.com',
-  process.env.FRONTEND_URL,
   process.env.VITE_FRONTEND_URL,
+  process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 // Initializing the cors middleware
