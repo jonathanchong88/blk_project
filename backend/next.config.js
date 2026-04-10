@@ -11,7 +11,6 @@ const nextConfig = {
       {
         source: '/api/:path*',
         headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
           {
             key: 'Access-Control-Allow-Origin',
             value: process.env.VITE_FRONTEND_URL || 'https://blk-project-frontend-dev.onrender.com',

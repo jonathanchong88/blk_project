@@ -37,13 +37,6 @@ function runMiddleware(req, res, fn) {
       if (result instanceof Error) {
         return reject(result);
       }
-      
-      // Automatically handle preflight OPTIONS requests
-      if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return resolve();
-      }
-      
       return resolve(result);
     });
   });
