@@ -53,6 +53,8 @@ services:
       - fromGroup: todo-app-common-dev
       - key: PORT
         value: 10000
+      - key: FRONTEND_URL
+        value: https://blk-project-frontend-dev.onrender.com
 
   # Development Frontend (Vite)
   - type: web

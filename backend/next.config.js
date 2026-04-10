@@ -4,6 +4,27 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+
+  // CORS headers for all API routes
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: process.env.FRONTEND_URL || 'https://blk-project-frontend-dev.onrender.com',
+          },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS' },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
