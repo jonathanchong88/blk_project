@@ -1,26 +1,11 @@
 // backend/pages/api/worship/events/[id].js
 import db from '../../../../db';
 import { authenticateToken } from '../../../../middleware/auth';
-import { cors } from '../../../../middleware/cors';
-
-function runMiddleware(req, res, fn) {
-  return new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
-      if (result instanceof Error) {
-        return reject(result);
-      }
-      return resolve(result);
-    });
-  });
-}
+import { cors, runMiddleware } from '../../../../middleware/cors';
 
 export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
   const { id } = req.query; // event_id
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
 
   if (req.method === 'GET') {
     try {
