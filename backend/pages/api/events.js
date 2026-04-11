@@ -1,6 +1,5 @@
 const supabase = require('../../db');
 const { authenticateToken } = require('../../middleware/auth');
-const { cors, runMiddleware } = require('../../middleware/cors');
 const webpush = require('web-push');
 
 webpush.setVapidDetails(
@@ -10,7 +9,6 @@ webpush.setVapidDetails(
 );
 
 export default async function handler(req, res) {
-    await runMiddleware(req, res, cors);
 
     const user = await authenticateToken(req);
 

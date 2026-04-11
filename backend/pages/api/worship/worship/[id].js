@@ -1,10 +1,7 @@
 // backend/pages/api/worship/events/[id].js
 import db from '../../../../db';
 import { authenticateToken } from '../../../../middleware/auth';
-import { cors, runMiddleware } from '../../../../middleware/cors';
-
 export default async function handler(req, res) {
-  await runMiddleware(req, res, cors);
   const { id } = req.query; // event_id
 
   if (req.method === 'GET') {

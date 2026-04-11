@@ -1,9 +1,6 @@
 import db from '../../../db';
 import { authenticateToken } from '../../../middleware/auth';
-import { cors, runMiddleware } from '../../../middleware/cors';
-
 export default async function handler(req, res) {
-  await runMiddleware(req, res, cors);
 
   if (req.method === 'GET') {
     const { event_id } = req.query;
