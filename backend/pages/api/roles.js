@@ -1,8 +1,5 @@
 const supabase = require('../../db');
-const { cors, runMiddleware } = require('../../middleware/cors');
-
 export default async function handler(req, res) {
-    await runMiddleware(req, res, cors);
 
     if (req.method === 'GET') {
         try {

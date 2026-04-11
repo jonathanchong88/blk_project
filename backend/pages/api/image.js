@@ -1,5 +1,4 @@
 const { google } = require('googleapis');
-const { cors, runMiddleware } = require('../../middleware/cors');
 
 const getDriveService = () => {
     try {
@@ -28,7 +27,6 @@ const getDriveService = () => {
 };
 
 export default async function handler(req, res) {
-    await runMiddleware(req, res, cors);
 
     if (req.method === 'GET') {
         const { id, download, name } = req.query;

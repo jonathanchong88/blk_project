@@ -1,9 +1,6 @@
 const supabase = require('../../../db');
 const { authenticateToken } = require('../../../middleware/auth');
-const { cors, runMiddleware } = require('../../../middleware/cors');
 const { google } = require('googleapis');
-
-const BUCKET = 'general';
 
 const getDriveService = () => {
     try {
@@ -32,7 +29,6 @@ const getDriveService = () => {
 };
 
 export default async function handler(req, res) {
-  await runMiddleware(req, res, cors);
 
   const user = await authenticateToken(req);
   if (!user) return res.status(401).json({ message: 'Unauthorized' });

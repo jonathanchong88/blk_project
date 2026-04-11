@@ -1,6 +1,5 @@
 const supabase = require('../../db');
 const { authenticateToken } = require('../../middleware/auth');
-const { cors, runMiddleware } = require('../../middleware/cors');
 const { google } = require('googleapis');
 const stream = require('stream');
 
@@ -66,7 +65,6 @@ async function getOrCreateSubfolder(drive, parentFolderId, subfolderName) {
 }
 
 export default async function handler(req, res) {
-    await runMiddleware(req, res, cors);
 
     const user = await authenticateToken(req);
     if (!user) return res.status(401).json({ message: 'Unauthorized' });
