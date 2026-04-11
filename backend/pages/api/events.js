@@ -20,18 +20,26 @@ export default async function handler(req, res) {
                 .select('*, event_likes(count)')
                 .order('date', { ascending: true });
 
-            console.log(error);
+            if (error) {
+                console.error('Database query error in events.js:', error);
+                return res.status(500).json({ error: error.message, details: error.details });
+            }
 
-            if (error) throw error;
-
-            console.log(data);
-
-            const eventsWithCounts = data.map(event => ({
-                ...event,
-                likes_count: event.event_likes[0]?.count || 0
-            }));
+            const eventsWithCounts = (data || []).map(event => {
+                let likesCount = 0;
+                if (Array.isArray(event.event_likes)) {
+                    likesCount = event.event_likes[0]?.count || 0;
+                } else if (event.event_likes && typeof event.event_likes === 'object') {
+                    likesCount = event.event_likes.count || 0;
+                }
+                return {
+                    ...event,
+                    likes_count: likesCount
+                };
+            });
             res.json(eventsWithCounts);
         } catch (err) {
+            console.error('Unhandled error in events GET:', err);
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'POST') {
