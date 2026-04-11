@@ -59,8 +59,10 @@ export function usePushNotifications() {
           console.error("VITE_VAPID_PUBLIC_KEY is not defined");
           return false;
       }
-      
-      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+
+      // Strip quotes if any, and trim whitespace
+      const sanitizedVapidKey = vapidPublicKey.replace(/^["'](.+)["']$/, '$1').trim();
+      const convertedVapidKey = urlBase64ToUint8Array(sanitizedVapidKey);
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
