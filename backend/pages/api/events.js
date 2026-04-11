@@ -90,7 +90,7 @@ export default async function handler(req, res) {
                     const payload = JSON.stringify({
                         title: `New Event: ${newEvent.title}`,
                         body: newEvent.description || 'A new event was just created.',
-                        url: `${process.env.VITE_FRONTEND_URL || 'http://localhost:3000'}/?event=${newEvent.id}`
+                        url: `${process.env.VITE_FRONTEND_URL || 'http://localhost:3000'}/events/${newEvent.id}`
                     });
 
                     await Promise.all(subscriptions.map(sub =>
