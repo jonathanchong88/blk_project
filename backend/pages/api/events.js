@@ -20,8 +20,12 @@ export default async function handler(req, res) {
                 .select('*, event_likes(count)')
                 .order('date', { ascending: true });
 
+            console.log(error);
+
             if (error) throw error;
-            
+
+            console.log(data);
+
             const eventsWithCounts = data.map(event => ({
                 ...event,
                 likes_count: event.event_likes[0]?.count || 0
@@ -81,7 +85,7 @@ export default async function handler(req, res) {
                         url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/?event=${newEvent.id}`
                     });
 
-                    await Promise.all(subscriptions.map(sub => 
+                    await Promise.all(subscriptions.map(sub =>
                         webpush.sendNotification(sub.subscription, payload).catch(err => {
                             if (err.statusCode === 410) {
                                 supabase.from('push_subscriptions').delete().eq('id', sub.id).then();
