@@ -72,6 +72,9 @@ function Sidebar({ userRole }) {
           <NavLink to="/activities" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             {t('sidebar.activities')}
           </NavLink>
+          <NavLink to="/news" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            {t('sidebar.news')}
+          </NavLink>
           {canManageUsers && (
             <>
               <NavLink to="/users" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>

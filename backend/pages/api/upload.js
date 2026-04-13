@@ -138,6 +138,13 @@ export default async function handler(req, res) {
             const songTitle = req.body.songTitle || 'Untitled';
             // Get or create a subfolder named after the song title
             targetFolder = await getOrCreateSubfolder(drive, process.env.GOOGLE_DRIVE_SONG_FOLDER_ID, songTitle);
+        } else if (req.body.folder === 'news') {
+            if (!process.env.GOOGLE_DRIVE_NEWS_FOLDER_ID) {
+                return res.status(500).json({ message: "Google Drive News Folder is not configured." });
+            }
+            const newsTitle = req.body.newsTitle || 'Untitled';
+            // Get or create a subfolder named after the news title
+            targetFolder = await getOrCreateSubfolder(drive, process.env.GOOGLE_DRIVE_NEWS_FOLDER_ID, newsTitle);
         }
 
         const bufferStream = new stream.PassThrough();

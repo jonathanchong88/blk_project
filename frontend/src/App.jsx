@@ -31,6 +31,10 @@ import SalvationList from './components/SalvationList';
 import Activities from './components/Activities';
 import Footer from './components/Footer';
 import PendingApproval from './components/PendingApproval';
+import News from './components/News';
+import PastNews from './components/PastNews';
+import CreateEditNews from './components/CreateEditNews';
+import NewsDetail from './components/NewsDetail';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -134,6 +138,17 @@ function App() {
               <ProtectedRoute token={token}><SalvationList token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
             } />
             
+            {/* News Routes */}
+            <Route path="/news" element={<News token={token} BASE_URL={BASE_URL} userRole={userRole} />} />
+            <Route path="/news/past" element={<PastNews token={token} BASE_URL={BASE_URL} />} />
+            <Route path="/news/create" element={
+              <ProtectedRoute token={token}><CreateEditNews token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+            } />
+            <Route path="/news/:id/edit" element={
+              <ProtectedRoute token={token}><CreateEditNews token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+            } />
+            <Route path="/news/:id" element={<NewsDetail token={token} BASE_URL={BASE_URL} userRole={userRole} />} />
+
             {/* Song Routes */}
             <Route path="/worship/songs" element={<SongList token={token} BASE_URL={BASE_URL} />} />
             <Route path="/worship/songs/create" element={
