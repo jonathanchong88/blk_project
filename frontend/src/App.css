@@ -1860,4 +1860,82 @@ button:hover {
   transform: none !important;
 }
 
+/* Home Welcome Section */
+.welcome-section {
+  display: flex;
+  flex-direction: column;
+  margin: 60px 0;
+  padding: 0 20px;
+}
+
+.welcome-header {
+  margin-bottom: 20px;
+}
+
+.welcome-subtitle {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 5px;
+  text-transform: capitalize;
+}
+
+.welcome-title {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin: 0;
+  font-weight: 600;
+}
+
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+
+.welcome-image {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.welcome-text-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.welcome-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #4a5568;
+  margin-bottom: 15px;
+}
+
+.welcome-author {
+  font-size: 1.05rem;
+  font-style: italic;
+  color: #718096;
+}
+
+@media (min-width: 768px) {
+  .welcome-content {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  
+  .welcome-image {
+    width: 40%;
+    max-width: none;
+  }
+  
+  .welcome-title {
+    font-size: 2.5rem;
+  }
+}
+
+
 

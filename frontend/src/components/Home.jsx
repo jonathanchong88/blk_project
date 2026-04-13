@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 
 
-function Home({ BASE_URL, token }) {
+function Home({ BASE_URL, token, userRole }) {
   const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [news, setNews] = useState([]);
@@ -13,6 +13,7 @@ function Home({ BASE_URL, token }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [mySchedule, setMySchedule] = useState([]);
   const [salvationCount, setSalvationCount] = useState(0);
+  const [welcomeData, setWelcomeData] = useState(null);
   const navigate = useNavigate();
   const { permission, subscribeToPush } = usePushNotifications();
 
@@ -102,6 +103,21 @@ function Home({ BASE_URL, token }) {
       setUserLikes(new Set());
     }
   }, [token, BASE_URL]);
+
+  useEffect(() => {
+    const fetchWelcomeData = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/settings?key=welcome_section`);
+        if (response.ok) {
+          const data = await response.json();
+          setWelcomeData(data);
+        }
+      } catch (error) {
+        console.error('Error fetching welcome data:', error);
+      }
+    };
+    fetchWelcomeData();
+  }, [BASE_URL]);
 
   // Fetch User Profile and Personal Schedule
   useEffect(() => {
@@ -326,6 +342,30 @@ function Home({ BASE_URL, token }) {
           ))}
         </div>
       )}
+
+      {/* Welcome Section */}
+      <div className="welcome-section" style={{ position: 'relative' }}>
+        {['admin', 'developer'].includes(userRole) && (
+          <button 
+            onClick={() => navigate('/admin/welcome-section')}
+            style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: '#f0ad4e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem' }}
+          >
+            ✏️ Edit Section
+          </button>
+        )}
+        <div className="welcome-header">
+          <p className="welcome-subtitle">{welcomeData?.welcome_subtitle || t('home.welcome_subtitle')}</p>
+          <h2 className="welcome-title">{welcomeData?.welcome_title || t('home.welcome_title')}</h2>
+        </div>
+        <div className="welcome-content">
+          <img src={welcomeData?.image_url ? `${BASE_URL}${welcomeData.image_url}` : "/rev_low.png"} alt="Senior Pastor" className="welcome-image" />
+          <div className="welcome-text-container">
+            <p className="welcome-text">{welcomeData?.welcome_text || t('home.welcome_text')}</p>
+            <p className="welcome-author">{welcomeData?.welcome_author || t('home.welcome_author')}</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }

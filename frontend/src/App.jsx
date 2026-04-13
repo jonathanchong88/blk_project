@@ -35,6 +35,7 @@ import News from './components/News';
 import PastNews from './components/PastNews';
 import CreateEditNews from './components/CreateEditNews';
 import NewsDetail from './components/NewsDetail';
+import EditWelcome from './components/EditWelcome';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -105,7 +106,7 @@ function App() {
             <PendingApproval logout={logout} />
           ) : (
             <Routes>
-            <Route path="/" element={<Home BASE_URL={BASE_URL} token={token} />} />
+            <Route path="/" element={<Home BASE_URL={BASE_URL} token={token} userRole={userRole} />} />
             <Route path="/login" element={<Auth setToken={setToken} BASE_URL={BASE_URL} />} />
             <Route path="/forgot-password" element={<ForgotPassword BASE_URL={BASE_URL} />} />
             <Route path="/reset-password" element={<ResetPassword BASE_URL={BASE_URL} />} />
@@ -138,6 +139,10 @@ function App() {
               <ProtectedRoute token={token}><SalvationList token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
             } />
             
+            <Route path="/admin/welcome-section" element={
+              <ProtectedRoute token={token}><EditWelcome token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+            } />
+
             {/* News Routes */}
             <Route path="/news" element={<News token={token} BASE_URL={BASE_URL} userRole={userRole} />} />
             <Route path="/news/past" element={<PastNews token={token} BASE_URL={BASE_URL} />} />

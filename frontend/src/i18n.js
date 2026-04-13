@@ -16,6 +16,7 @@ const resources = {
       "sidebar.activities": "Activities",
       "sidebar.users": "Users",
       "sidebar.commitments": "Commitments",
+      "sidebar.edit_welcome": "Edit Welcome",
       
       "sidebar.worship_section": "Worship",
       "sidebar.worship.songs": "Song",
@@ -198,6 +199,11 @@ const resources = {
       "home.language_english": "English",
       "home.latest_news": "Latest News",
       "home.no_news": "No news available at the moment.",
+      
+      "home.welcome_subtitle": "A Word From Our Senior Pastor",
+      "home.welcome_title": "Welcome to Mega Chinese Methodist Church",
+      "home.welcome_text": "\"Mega Chinese Methodist Church's mission is to establish a healthy church that integrates our five purposes -- Evangelism, Celebration, Life Group/Fellowship, Discipleship and Ministry. We value each disciple of Christ living a life of reverence for God, loving one another, and loving neighbors as oneself. We believe that Christian families are the starting point to fulfill our faith mission. Starting 2020, the church has adopted \\\"A Generation After God's Own Heart\\\" as the church's theme to pass down the faith, and God be glorified from generation to generation. We invite you to join us!\"",
+      "home.welcome_author": "-- Rev. Low Jia Shen",
 
       "news.upcoming_title": "News",
       "news.past_title": "Past News",
@@ -261,6 +267,7 @@ const resources = {
       "sidebar.activities": "活动记录",
       "sidebar.users": "用户管理",
       "sidebar.commitments": "决志名单",
+      "sidebar.edit_welcome": "编辑首页欢迎内容",
       
       "sidebar.worship_section": "敬拜事工",
       "sidebar.worship.songs": "诗歌",
@@ -443,6 +450,11 @@ const resources = {
       "home.language_english": "英文",
       "home.latest_news": "最新新闻",
       "home.no_news": "暂无最新新闻。",
+      
+      "home.welcome_subtitle": "主任牧师的话",
+      "home.welcome_title": "欢迎来到美佳卫理公会",
+      "home.welcome_text": "“美佳卫理公会的使命是建立一间整合五个目的（布道、敬拜、小组/团契、门徒训练和事工）的健康教会。我们看重每位基督门徒过敬畏神、彼此相爱及爱邻如己的生活。我们相信建立基督化家庭是完成信仰使命的起点。自2020年起，教会采用‘合神心意的世代’作为教会主题，以传承信仰，愿神在世世代代中得荣耀。我们邀请您加入我们！”",
+      "home.welcome_author": "-- 刘家深牧师",
 
       "news.upcoming_title": "新闻",
       "news.past_title": "过往新闻",
