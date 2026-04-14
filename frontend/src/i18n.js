@@ -8,7 +8,7 @@ const resources = {
       "topbar.profile": "Profile",
       "topbar.logout": "Logout",
       "topbar.login": "Login",
-      
+
       "sidebar.home": "Home",
       "sidebar.events": "Events",
       "sidebar.news": "News",
@@ -17,12 +17,12 @@ const resources = {
       "sidebar.users": "Users",
       "sidebar.commitments": "Commitments",
       "sidebar.edit_welcome": "Edit Welcome",
-      
+
       "sidebar.worship_section": "Worship",
       "sidebar.worship.songs": "Song",
       "sidebar.worship.band": "Band",
       "sidebar.worship.schedule": "Schedule",
-      
+
       "footer.contact_info": "Contact Info",
       "footer.address": "Address:",
       "footer.address_text": "No 301, KB 1/5, Kampung Baru Selangor, Seri Kembangan, 43300, Selangor, Malaysia",
@@ -32,7 +32,7 @@ const resources = {
       "footer.socials": "Socials",
       "footer.copyright": "Copyright © 2026 - Lutheran Church in Balakong",
       "footer.privacy_policy": "Privacy Policy",
-      
+
       "salvation.hero.eyebrow": "A New Beginning",
       "salvation.hero.title": "Salvation",
       "salvation.hero.subtitle": "Every story has a turning point. This could be yours.",
@@ -42,19 +42,19 @@ const resources = {
       "salvation.teaching.eyebrow": "The Path",
       "salvation.teaching.title": "What Now?",
       "salvation.teaching.subtitle": "If you've decided to follow Jesus, we want to walk this new journey alongside you.",
-      
+
       "salvation.teaching.step1.title": "Acknowledge",
       "salvation.teaching.step1.body": "Recognize that we all fall short. Sin separates us from God — not as punishment, but as a natural distance from His perfection.",
       "salvation.teaching.step1.verse": "\"For all have fallen short of the glory of God.\"",
-      
+
       "salvation.teaching.step2.title": "Believe",
       "salvation.teaching.step2.body": "Trust that Jesus Christ — the Son of God — died for your sins and rose from the dead, conquering death for you.",
       "salvation.teaching.step2.verse": "\"God so loved the world that He gave His one and only Son...\"",
-      
+
       "salvation.teaching.step3.title": "Confess",
       "salvation.teaching.step3.body": "Speak it out with faith. When you confess with your mouth and believe in your heart, salvation is yours.",
       "salvation.teaching.step3.verse": "\"If you declare with your mouth... you will be saved.\"",
-      
+
       "salvation.teaching.prayer.eyebrow": "A Prayer of Salvation",
       "salvation.teaching.prayer.body_pt1": "\"Dear God, I know I'm a sinner, and I ask for your forgiveness. I believe Jesus Christ is Your Son. I believe He died for my sin and rose from the dead. I want to trust and follow Him as Lord and Saviour from this day forward. In Jesus' name, ",
       "salvation.teaching.prayer.amen": "Amen.",
@@ -76,14 +76,14 @@ const resources = {
       "salvation.form.eyebrow": "Take the Step",
       "salvation.form.title": "I Made a Decision",
       "salvation.form.subtitle": "Let us know — we would love to celebrate with you and support your next step.",
-      
+
       "salvation.form.decision1.label": "🙏  I followed Jesus today",
       "salvation.form.decision1.desc": "I made a first-time commitment to Christ",
       "salvation.form.decision2.label": "📖  I want to learn more",
       "salvation.form.decision2.desc": "I'm curious and would love guidance",
       "salvation.form.decision3.label": "✨  I need prayer",
       "salvation.form.decision3.desc": "Please pray with me and for me",
-      
+
       "salvation.form.first_name": "First Name",
       "salvation.form.last_name": "Last Name",
       "salvation.form.email": "Email Address",
@@ -93,7 +93,7 @@ const resources = {
       "salvation.form.submitting": "Submitting...",
       "salvation.form.error": "Something went wrong. Please try again.",
       "salvation.form.alert": "Please select a decision.",
-      
+
       "salvation.form.success.title": "Thank You",
       "salvation.form.success.desc": "We have received your decision. Someone from our team will personally reach out to walk this new journey with you.",
 
@@ -199,11 +199,12 @@ const resources = {
       "home.language_english": "English",
       "home.latest_news": "Latest News",
       "home.no_news": "No news available at the moment.",
-      
+
       "home.welcome_subtitle": "A Word From Our Senior Pastor",
       "home.welcome_title": "Welcome to Mega Chinese Methodist Church",
       "home.welcome_text": "\"Mega Chinese Methodist Church's mission is to establish a healthy church that integrates our five purposes -- Evangelism, Celebration, Life Group/Fellowship, Discipleship and Ministry. We value each disciple of Christ living a life of reverence for God, loving one another, and loving neighbors as oneself. We believe that Christian families are the starting point to fulfill our faith mission. Starting 2020, the church has adopted \\\"A Generation After God's Own Heart\\\" as the church's theme to pass down the faith, and God be glorified from generation to generation. We invite you to join us!\"",
       "home.welcome_author": "-- Rev. Low Jia Shen",
+      "home.no_welcome_entries": "Welcome messages coming soon.",
 
       "news.upcoming_title": "News",
       "news.past_title": "Past News",
@@ -259,7 +260,7 @@ const resources = {
       "topbar.profile": "个人资料",
       "topbar.logout": "登出",
       "topbar.login": "登录",
-      
+
       "sidebar.home": "首页",
       "sidebar.events": "活动",
       "sidebar.news": "新闻",
@@ -268,12 +269,12 @@ const resources = {
       "sidebar.users": "用户管理",
       "sidebar.commitments": "决志名单",
       "sidebar.edit_welcome": "编辑首页欢迎内容",
-      
+
       "sidebar.worship_section": "敬拜事工",
       "sidebar.worship.songs": "诗歌",
       "sidebar.worship.band": "乐队",
       "sidebar.worship.schedule": "排班",
-      
+
       "footer.contact_info": "联络方式",
       "footer.address": "地址:",
       "footer.address_text": "No 301, KB 1/5, Kampung Baru Selangor, Seri Kembangan, 43300, Selangor, Malaysia",
@@ -283,7 +284,7 @@ const resources = {
       "footer.socials": "社交媒体",
       "footer.copyright": "版权所有 © 2026 - 无拉港路德圣公会",
       "footer.privacy_policy": "隐私政策",
-      
+
       "salvation.hero.eyebrow": "新的开始",
       "salvation.hero.title": "救恩",
       "salvation.hero.subtitle": "每个人的生命都有转折点，这可能就是您的转折点。",
@@ -293,19 +294,19 @@ const resources = {
       "salvation.teaching.eyebrow": "接下来呢？",
       "salvation.teaching.title": "如何迈出下一步？",
       "salvation.teaching.subtitle": "如果您决定跟随耶稣，我们希望能陪伴您走过这段新的旅程。",
-      
+
       "salvation.teaching.step1.title": "承认",
       "salvation.teaching.step1.body": "承认我们都不完美。罪使我们与神隔绝——这不是惩罚，而是与祂的完美脱节。",
       "salvation.teaching.step1.verse": "“因为世人都犯了罪，亏缺了神的荣耀。”",
-      
+
       "salvation.teaching.step2.title": "相信",
       "salvation.teaching.step2.body": "相信耶稣基督（神的儿子）为您的罪而死，并从死里复活，为您战胜了死亡。",
       "salvation.teaching.step2.verse": "“神爱世人，甚至将祂的独生子赐给他们...”",
-      
+
       "salvation.teaching.step3.title": "宣告",
       "salvation.teaching.step3.body": "凭着信心宣告。当你口里承认，心里相信，救恩就是你的了。",
       "salvation.teaching.step3.verse": "“你若口里认耶稣为主... 就必得救。”",
-      
+
       "salvation.teaching.prayer.eyebrow": "决志祷告",
       "salvation.teaching.prayer.body_pt1": "“亲爱的上帝，我知道我是一个罪人，我请求祢的饶恕。我相信耶稣基督是祢的儿子。我相信祂为我的罪而死，并从死里复活。从今以后，我愿信靠并跟随祂，尊祂为我的生命主宰和救主。奉耶稣的名祷告，",
       "salvation.teaching.prayer.amen": "阿们。",
@@ -327,14 +328,14 @@ const resources = {
       "salvation.form.eyebrow": "迈出第一步",
       "salvation.form.title": "我已作决定",
       "salvation.form.subtitle": "请让我们知道——我们非常乐意与您一同庆祝，并竭力支持您的下一步。",
-      
+
       "salvation.form.decision1.label": "🙏  我今天决定跟随耶稣",
       "salvation.form.decision1.desc": "这是我第一次委身于基督",
       "salvation.form.decision2.label": "📖  我想了解更多",
       "salvation.form.decision2.desc": "我很好奇，并希望能获得更多指引",
       "salvation.form.decision3.label": "✨  我需要代祷",
       "salvation.form.decision3.desc": "请支持并为我祷告",
-      
+
       "salvation.form.first_name": "名字 (First Name)",
       "salvation.form.last_name": "姓氏 (Last Name)",
       "salvation.form.email": "电子邮件",
@@ -344,10 +345,10 @@ const resources = {
       "salvation.form.submitting": "提交中...",
       "salvation.form.error": "出现错误。请重试。",
       "salvation.form.alert": "请选择一项决定。",
-      
+
       "salvation.form.success.title": "谢谢您",
       "salvation.form.success.desc": "我们已收到您的决定。我们的团队成员将亲自联系您，陪您一同走过这段新旅程。",
-      
+
       "users.title": "用户列表",
       "users.loading": "正在加载用户...",
       "users.no_permission": "您没有权限查看此页面。",
@@ -450,11 +451,12 @@ const resources = {
       "home.language_english": "英文",
       "home.latest_news": "最新新闻",
       "home.no_news": "暂无最新新闻。",
-      
-      "home.welcome_subtitle": "主任牧师的话",
-      "home.welcome_title": "欢迎来到美佳卫理公会",
+
+      "home.welcome_subtitle": "导师哥哥姐姐的话",
+      "home.welcome_title": "欢迎来到活力站",
       "home.welcome_text": "“美佳卫理公会的使命是建立一间整合五个目的（布道、敬拜、小组/团契、门徒训练和事工）的健康教会。我们看重每位基督门徒过敬畏神、彼此相爱及爱邻如己的生活。我们相信建立基督化家庭是完成信仰使命的起点。自2020年起，教会采用‘合神心意的世代’作为教会主题，以传承信仰，愿神在世世代代中得荣耀。我们邀请您加入我们！”",
       "home.welcome_author": "-- 刘家深牧师",
+      "home.no_welcome_entries": "欢迎寄语即将发布。",
 
       "news.upcoming_title": "新闻",
       "news.past_title": "过往新闻",

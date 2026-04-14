@@ -13,7 +13,7 @@ function Home({ BASE_URL, token, userRole }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [mySchedule, setMySchedule] = useState([]);
   const [salvationCount, setSalvationCount] = useState(0);
-  const [welcomeData, setWelcomeData] = useState(null);
+  const [welcomeEntries, setWelcomeEntries] = useState([]);
   const navigate = useNavigate();
   const { permission, subscribeToPush } = usePushNotifications();
 
@@ -105,18 +105,18 @@ function Home({ BASE_URL, token, userRole }) {
   }, [token, BASE_URL]);
 
   useEffect(() => {
-    const fetchWelcomeData = async () => {
+    const fetchWelcomeEntries = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/settings?key=welcome_section`);
+        const response = await fetch(`${BASE_URL}/api/welcome-entries`);
         if (response.ok) {
           const data = await response.json();
-          setWelcomeData(data);
+          setWelcomeEntries(data);
         }
       } catch (error) {
-        console.error('Error fetching welcome data:', error);
+        console.error('Error fetching welcome entries:', error);
       }
     };
-    fetchWelcomeData();
+    fetchWelcomeEntries();
   }, [BASE_URL]);
 
   // Fetch User Profile and Personal Schedule
@@ -343,42 +343,69 @@ function Home({ BASE_URL, token, userRole }) {
         </div>
       )}
 
-      {/* Welcome Section */}
-      {/* Resolve the correct language variant from welcomeData.
-          New shape: { en: {...}, zh: {...}, image_url }
-          Old/flat shape (pre-migration): { welcome_title, welcome_text, ... }
-          Falls back: lang variant → EN variant → i18n static defaults */}
-      {(() => {
-        const lang = i18n.language || 'en';
-        const langData = welcomeData?.[lang] || welcomeData?.en || null;
-        // Also support old flat format (no language sub-objects)
-        const flatData = welcomeData && !welcomeData.en ? welcomeData : null;
-        const w = langData || flatData;
-        const imageUrl = welcomeData?.image_url;
-        return (
-          <div className="welcome-section" style={{ position: 'relative' }}>
-            {['admin', 'developer'].includes(userRole) && (
-              <button
-                onClick={() => navigate('/admin/welcome-section')}
-                style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: '#f0ad4e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem' }}
-              >
-                ✏️ Edit Section
-              </button>
-            )}
-            <div className="welcome-header">
-              <p className="welcome-subtitle">{w?.welcome_subtitle || t('home.welcome_subtitle')}</p>
-              <h2 className="welcome-title">{w?.welcome_title || t('home.welcome_title')}</h2>
-            </div>
-            <div className="welcome-content">
-              <img src={imageUrl ? `${BASE_URL}${imageUrl}` : "/rev_low.png"} alt="Senior Pastor" className="welcome-image" />
-              <div className="welcome-text-container">
-                <p className="welcome-text">{w?.welcome_text || t('home.welcome_text')}</p>
-                <p className="welcome-author">{w?.welcome_author || t('home.welcome_author')}</p>
-              </div>
-            </div>
+      {/* Welcome Section — Testimonial Card Grid */}
+      <div className="welcome-section-v2">
+        {/* Section Header */}
+        <div className="welcome-section-header">
+          <h2 className="welcome-section-title">{t('home.welcome_title')}</h2>
+          <div className="welcome-section-divider" />
+          <p className="welcome-section-subtitle">{t('home.welcome_subtitle')}</p>
+          {['admin', 'developer'].includes(userRole) && (
+            <button
+              onClick={() => navigate('/admin/welcome-section')}
+              style={{ marginTop: '12px', marginBottom: '12px', backgroundColor: '#f0a500', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+            >
+              ✏️ Manage Welcome Section
+            </button>
+          )}
+        </div>
+
+        {/* Cards */}
+        {welcomeEntries.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#aaa' }}>
+            {t('home.no_welcome_entries')}
           </div>
-        );
-      })()}
+        ) : (
+          <div className="welcome-cards-grid">
+            {welcomeEntries.map((entry, i) => {
+              const lang = i18n.language || 'en';
+              const text = (lang === 'zh' && entry.zh_text) ? entry.zh_text : entry.en_text;
+              const title = (lang === 'zh' && entry.zh_title) ? entry.zh_title : entry.en_title;
+              const author = (lang === 'zh' && entry.zh_author) ? entry.zh_author : entry.en_author;
+              const sub = (lang === 'zh' && entry.zh_subtitle) ? entry.zh_subtitle : entry.en_subtitle;
+              // Center card when there are 3+ entries
+              const isCenter = welcomeEntries.length >= 3 && i === Math.floor(welcomeEntries.length / 2);
+              return (
+                <div key={entry.id} className={`welcome-card${isCenter ? ' center' : ''}`}>
+                  {/* Circular avatar sits on top of card */}
+                  <div className="welcome-card-avatar-wrap">
+                    {entry.image_url ? (
+                      <img
+                        src={`${BASE_URL}${entry.image_url}`}
+                        alt={author || title}
+                        className="welcome-card-avatar"
+                      />
+                    ) : (
+                      <div className="welcome-card-avatar welcome-card-avatar-placeholder">👤</div>
+                    )}
+                  </div>
+
+                  {/* Card body */}
+                  <div className="welcome-card-body">
+                    <span className="welcome-card-quote-open">❝❝</span>
+                    <p className="welcome-card-text">{text}</p>
+                    <span className="welcome-card-quote-close">❞❞</span>
+                    <div className="welcome-card-footer">
+                      <span className="welcome-card-author">{author || title}</span>
+                      {sub && <span className="welcome-card-role"> {sub}</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
     </div>
   );

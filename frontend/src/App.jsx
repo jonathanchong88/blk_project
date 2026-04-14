@@ -35,7 +35,7 @@ import News from './components/News';
 import PastNews from './components/PastNews';
 import CreateEditNews from './components/CreateEditNews';
 import NewsDetail from './components/NewsDetail';
-import EditWelcome from './components/EditWelcome';
+import WelcomeManager from './components/WelcomeManager';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -140,7 +140,7 @@ function App() {
             } />
             
             <Route path="/admin/welcome-section" element={
-              <ProtectedRoute token={token}><EditWelcome token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+              <ProtectedRoute token={token}><WelcomeManager token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
             } />
 
             {/* News Routes */}
