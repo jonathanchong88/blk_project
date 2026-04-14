@@ -5,7 +5,7 @@ import { usePushNotifications } from '../hooks/usePushNotifications';
 
 
 function Home({ BASE_URL, token, userRole }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [events, setEvents] = useState([]);
   const [news, setNews] = useState([]);
   const [songs, setSongs] = useState([]);
@@ -344,27 +344,41 @@ function Home({ BASE_URL, token, userRole }) {
       )}
 
       {/* Welcome Section */}
-      <div className="welcome-section" style={{ position: 'relative' }}>
-        {['admin', 'developer'].includes(userRole) && (
-          <button 
-            onClick={() => navigate('/admin/welcome-section')}
-            style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: '#f0ad4e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem' }}
-          >
-            ✏️ Edit Section
-          </button>
-        )}
-        <div className="welcome-header">
-          <p className="welcome-subtitle">{welcomeData?.welcome_subtitle || t('home.welcome_subtitle')}</p>
-          <h2 className="welcome-title">{welcomeData?.welcome_title || t('home.welcome_title')}</h2>
-        </div>
-        <div className="welcome-content">
-          <img src={welcomeData?.image_url ? `${BASE_URL}${welcomeData.image_url}` : "/rev_low.png"} alt="Senior Pastor" className="welcome-image" />
-          <div className="welcome-text-container">
-            <p className="welcome-text">{welcomeData?.welcome_text || t('home.welcome_text')}</p>
-            <p className="welcome-author">{welcomeData?.welcome_author || t('home.welcome_author')}</p>
+      {/* Resolve the correct language variant from welcomeData.
+          New shape: { en: {...}, zh: {...}, image_url }
+          Old/flat shape (pre-migration): { welcome_title, welcome_text, ... }
+          Falls back: lang variant → EN variant → i18n static defaults */}
+      {(() => {
+        const lang = i18n.language || 'en';
+        const langData = welcomeData?.[lang] || welcomeData?.en || null;
+        // Also support old flat format (no language sub-objects)
+        const flatData = welcomeData && !welcomeData.en ? welcomeData : null;
+        const w = langData || flatData;
+        const imageUrl = welcomeData?.image_url;
+        return (
+          <div className="welcome-section" style={{ position: 'relative' }}>
+            {['admin', 'developer'].includes(userRole) && (
+              <button
+                onClick={() => navigate('/admin/welcome-section')}
+                style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: '#f0ad4e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem' }}
+              >
+                ✏️ Edit Section
+              </button>
+            )}
+            <div className="welcome-header">
+              <p className="welcome-subtitle">{w?.welcome_subtitle || t('home.welcome_subtitle')}</p>
+              <h2 className="welcome-title">{w?.welcome_title || t('home.welcome_title')}</h2>
+            </div>
+            <div className="welcome-content">
+              <img src={imageUrl ? `${BASE_URL}${imageUrl}` : "/rev_low.png"} alt="Senior Pastor" className="welcome-image" />
+              <div className="welcome-text-container">
+                <p className="welcome-text">{w?.welcome_text || t('home.welcome_text')}</p>
+                <p className="welcome-author">{w?.welcome_author || t('home.welcome_author')}</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
     </div>
   );

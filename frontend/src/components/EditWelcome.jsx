@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// Default empty language block
+const emptyLang = () => ({
+  welcome_subtitle: '',
+  welcome_title: '',
+  welcome_text: '',
+  welcome_author: '',
+});
+
 function EditWelcome({ token, BASE_URL }) {
   const [formData, setFormData] = useState({
-    welcome_subtitle: '',
-    welcome_title: '',
-    welcome_text: '',
-    welcome_author: '',
-    image_url: ''
+    en: emptyLang(),
+    zh: emptyLang(),
+    image_url: '',
   });
+  const [activeTab, setActiveTab] = useState('en');
   const [imageUploading, setImageUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,13 +29,36 @@ function EditWelcome({ token, BASE_URL }) {
         const res = await fetch(`${BASE_URL}/api/settings?key=welcome_section`);
         if (res.ok) {
           const data = await res.json();
-          setFormData({
-            welcome_subtitle: data.welcome_subtitle || '',
-            welcome_title: data.welcome_title || '',
-            welcome_text: data.welcome_text || '',
-            welcome_author: data.welcome_author || '',
-            image_url: data.image_url || ''
-          });
+
+          // Detect old flat format (no 'en' sub-key) and migrate
+          if (data && !data.en) {
+            setFormData({
+              en: {
+                welcome_subtitle: data.welcome_subtitle || '',
+                welcome_title: data.welcome_title || '',
+                welcome_text: data.welcome_text || '',
+                welcome_author: data.welcome_author || '',
+              },
+              zh: emptyLang(),
+              image_url: data.image_url || '',
+            });
+          } else if (data) {
+            setFormData({
+              en: {
+                welcome_subtitle: data.en?.welcome_subtitle || '',
+                welcome_title: data.en?.welcome_title || '',
+                welcome_text: data.en?.welcome_text || '',
+                welcome_author: data.en?.welcome_author || '',
+              },
+              zh: {
+                welcome_subtitle: data.zh?.welcome_subtitle || '',
+                welcome_title: data.zh?.welcome_title || '',
+                welcome_text: data.zh?.welcome_text || '',
+                welcome_author: data.zh?.welcome_author || '',
+              },
+              image_url: data.image_url || '',
+            });
+          }
         }
       } catch (err) {
         console.error('Error fetching welcome settings:', err);
@@ -38,6 +68,13 @@ function EditWelcome({ token, BASE_URL }) {
     };
     fetchSettings();
   }, [BASE_URL]);
+
+  const handleLangChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [activeTab]: { ...prev[activeTab], [field]: value },
+    }));
+  };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -53,7 +90,7 @@ function EditWelcome({ token, BASE_URL }) {
           body: JSON.stringify({
             file: reader.result,
             filename: file.name,
-            folder: 'profile', // Utilizing GOOGLE_DRIVE_PROFILE_FOLDER_ID
+            folder: 'profile',
             newsTitle: 'Welcome Image',
           }),
         });
@@ -82,7 +119,7 @@ function EditWelcome({ token, BASE_URL }) {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           key: 'welcome_section',
-          value: formData
+          value: formData,
         }),
       });
 
@@ -103,55 +140,117 @@ function EditWelcome({ token, BASE_URL }) {
 
   if (loading) return <div style={{ padding: '2rem' }}>Loading Settings...</div>;
 
+  const tabStyles = {
+    tab: (active) => ({
+      padding: '8px 24px',
+      border: 'none',
+      borderBottom: active ? '3px solid #007bff' : '3px solid transparent',
+      background: 'none',
+      fontWeight: active ? '700' : '400',
+      color: active ? '#007bff' : '#555',
+      cursor: 'pointer',
+      fontSize: '1rem',
+      transition: 'all 0.2s',
+    }),
+    tabBar: {
+      display: 'flex',
+      gap: '4px',
+      borderBottom: '1px solid #ddd',
+      marginBottom: '24px',
+    },
+  };
+
+  const lang = formData[activeTab];
+
   return (
     <div className="events-container">
       <h2>Edit Welcome Section</h2>
-      
+
       {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
 
+      {/* Language Tabs */}
+      <div style={tabStyles.tabBar}>
+        <button
+          id="welcome-tab-en"
+          type="button"
+          style={tabStyles.tab(activeTab === 'en')}
+          onClick={() => setActiveTab('en')}
+        >
+          🇬🇧 English
+        </button>
+        <button
+          id="welcome-tab-zh"
+          type="button"
+          style={tabStyles.tab(activeTab === 'zh')}
+          onClick={() => setActiveTab('zh')}
+        >
+          🇨🇳 中文
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="event-form">
-        
-        <label style={{ fontWeight: 'bold' }}>Subtitle</label>
+
+        {/* --- Language-specific fields --- */}
+        <label style={{ fontWeight: 'bold' }}>
+          Subtitle <span style={{ color: '#888', fontWeight: 400 }}>({activeTab === 'en' ? 'English' : '中文'})</span>
+        </label>
         <input
+          id={`welcome-subtitle-${activeTab}`}
           type="text"
-          placeholder="e.g. A Word From Our Senior Pastor"
-          value={formData.welcome_subtitle}
-          onChange={e => setFormData({ ...formData, welcome_subtitle: e.target.value })}
+          placeholder={activeTab === 'en' ? 'e.g. A Word From Our Senior Pastor' : '例：主任牧师的话'}
+          value={lang.welcome_subtitle}
+          onChange={e => handleLangChange('welcome_subtitle', e.target.value)}
         />
 
-        <label style={{ fontWeight: 'bold' }}>Title</label>
+        <label style={{ fontWeight: 'bold' }}>
+          Title <span style={{ color: '#888', fontWeight: 400 }}>({activeTab === 'en' ? 'English' : '中文'})</span>
+        </label>
         <input
+          id={`welcome-title-${activeTab}`}
           type="text"
-          placeholder="e.g. Welcome to Mega Chinese Methodist Church"
-          value={formData.welcome_title}
-          onChange={e => setFormData({ ...formData, welcome_title: e.target.value })}
-          required
+          placeholder={activeTab === 'en' ? 'e.g. Welcome to Mega Chinese Methodist Church' : '例：欢迎来到美佳卫理公会'}
+          value={lang.welcome_title}
+          onChange={e => handleLangChange('welcome_title', e.target.value)}
+          required={activeTab === 'en'}
         />
 
-        <label style={{ fontWeight: 'bold' }}>Welcome Text</label>
+        <label style={{ fontWeight: 'bold' }}>
+          Welcome Text <span style={{ color: '#888', fontWeight: 400 }}>({activeTab === 'en' ? 'English' : '中文'})</span>
+        </label>
         <textarea
-          placeholder="e.g. Our mission is to establish a healthy church..."
-          value={formData.welcome_text}
-          onChange={e => setFormData({ ...formData, welcome_text: e.target.value })}
+          id={`welcome-text-${activeTab}`}
+          placeholder={activeTab === 'en' ? 'e.g. Our mission is to establish a healthy church...' : '例：美佳卫理公会的使命…'}
+          value={lang.welcome_text}
+          onChange={e => handleLangChange('welcome_text', e.target.value)}
           style={{ minHeight: '150px' }}
-          required
+          required={activeTab === 'en'}
         />
 
-        <label style={{ fontWeight: 'bold' }}>Author</label>
+        <label style={{ fontWeight: 'bold' }}>
+          Author <span style={{ color: '#888', fontWeight: 400 }}>({activeTab === 'en' ? 'English' : '中文'})</span>
+        </label>
         <input
+          id={`welcome-author-${activeTab}`}
           type="text"
-          placeholder="e.g. -- Rev. Low Jia Shen"
-          value={formData.welcome_author}
-          onChange={e => setFormData({ ...formData, welcome_author: e.target.value })}
+          placeholder={activeTab === 'en' ? 'e.g. -- Rev. Low Jia Shen' : '例：-- 刘家深牧师'}
+          value={lang.welcome_author}
+          onChange={e => handleLangChange('welcome_author', e.target.value)}
         />
 
-        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Welcome Image</label>
+        {/* --- Shared: Image --- */}
+        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px', marginTop: '8px' }}>
+          Welcome Image <span style={{ color: '#888', fontWeight: 400 }}>(shared across languages)</span>
+        </label>
         <div style={{ marginBottom: '20px' }}>
           <input type="file" accept="image/*" onChange={handleImageUpload} disabled={imageUploading} />
           {imageUploading && <p style={{ margin: '5px 0', fontSize: '0.9rem' }}>Uploading Image...</p>}
           {formData.image_url && !imageUploading && (
             <div style={{ marginTop: '10px' }}>
-              <img src={`${BASE_URL}${formData.image_url}`} alt="Preview" style={{ height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
+              <img
+                src={`${BASE_URL}${formData.image_url}`}
+                alt="Preview"
+                style={{ height: '100px', objectFit: 'cover', borderRadius: '4px' }}
+              />
               <p style={{ margin: '5px 0', fontSize: '0.9rem', color: 'green' }}>Current Image Set.</p>
             </div>
           )}
