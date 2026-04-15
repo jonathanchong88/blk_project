@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useTranslation } from 'react-i18next';
+import './Auth.css';
 
 function Auth({ setToken, BASE_URL }) {
   const { t } = useTranslation();
@@ -122,65 +123,108 @@ function Auth({ setToken, BASE_URL }) {
   };
 
   return (
-    <div className="auth-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
-      <h1>{isLoginView ? t('auth.login') : t('auth.signup')}</h1>
-      <form onSubmit={auth} className="auth-form">
-        {!isLoginView && (
-          <input 
-            type="text" 
-            placeholder={t('auth.username_placeholder')} 
-            value={username} 
-            onChange={e => setUsername(e.target.value)} 
-            required={!isLoginView}
-          />
-        )}
-        <input 
-          type="email" 
-          placeholder={t('auth.email_placeholder')} 
-          value={email} 
-          onChange={handleEmailChange} 
-          onBlur={e => checkEmailExists(e.target.value)}
-          required
-        />
-        {!isLoginView && emailExists && (
-          <p style={{ color: '#ff4d4d', fontSize: '0.85rem', margin: '0 0 1rem 0', textAlign: 'left', width: '100%' }}>
-            {t('auth.email_exists_alert')}
-          </p>
-        )}
-        <div className="password-input-wrapper">
-          <input 
-            type={showPassword ? "text" : "password"} 
-            placeholder={t('auth.password_placeholder')} 
-            value={password} 
-            onChange={e => setPassword(e.target.value)} 
-            required
-          />
-          <button 
-            type="button" 
-            className="password-toggle-btn"
-            onClick={() => setShowPassword(!showPassword)}
-            tabIndex="-1"
-          >
-            {showPassword ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            )}
-          </button>
+    <div className="auth-wrapper">
+      <div className="auth-split-card">
+        {/* Left presentation side */}
+        <div className="auth-presentation">
+          <div className="auth-presentation-content">
+            <h2>{isLoginView ? t('auth.welcome_back', 'Welcome Back') : t('auth.join_us', 'Join Us Today')}</h2>
+            <p>
+              {isLoginView 
+                ? t('auth.login_tagline', 'Sign in to discover incredible events and join our community.') 
+                : t('auth.signup_tagline', 'Create your account to unlock all features.')}
+            </p>
+          </div>
         </div>
-        <button type="submit" disabled={loading || checkingEmail || (!isLoginView && emailExists)}>
-          {loading ? t('auth.processing') : (isLoginView ? t('auth.login') : t('auth.signup'))}
-        </button>
-      </form>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
-        {isLoginView && (
-          <button type="button" className="link-btn" onClick={() => navigate('/forgot-password')}>
-            {t('auth.forgot_password')}
-          </button>
-        )}
-        <button className="link-btn" onClick={() => setIsLoginView(!isLoginView)}>
-          {isLoginView ? t('auth.need_account_signup') : t('auth.have_account_login')}
-        </button>
+        
+        {/* Right form side */}
+        <div className="auth-form-section">
+          <div className="auth-form-header">
+            <h1>{isLoginView ? t('auth.login') : t('auth.signup')}</h1>
+            <p className="auth-subtitle">
+              {isLoginView ? t('auth.login_subtitle', 'Please enter your details.') : t('auth.signup_subtitle', 'Create an account to continue.')}
+            </p>
+          </div>
+          
+          <form onSubmit={auth} className="auth-form-modern">
+            {!isLoginView && (
+              <div className="input-group">
+                <label>{t('auth.username_label', 'Username')}</label>
+                <input 
+                  type="text" 
+                  placeholder={t('auth.username_placeholder', 'Enter your username')} 
+                  value={username} 
+                  onChange={e => setUsername(e.target.value)} 
+                  required={!isLoginView}
+                />
+              </div>
+            )}
+            
+            <div className="input-group">
+              <label>{t('auth.email_label', 'Email Address')}</label>
+              <input 
+                type="email" 
+                placeholder={t('auth.email_placeholder', 'Enter your email')} 
+                value={email} 
+                onChange={handleEmailChange} 
+                onBlur={e => checkEmailExists(e.target.value)}
+                required
+              />
+              {!isLoginView && emailExists && (
+                <span className="error-message">
+                  {t('auth.email_exists_alert')}
+                </span>
+              )}
+            </div>
+            
+            <div className="input-group">
+              <label>{t('auth.password_label', 'Password')}</label>
+              <div className="password-input-modern">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder={t('auth.password_placeholder', 'Enter your password')} 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  required
+                />
+                <button 
+                  type="button" 
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex="-1"
+                >
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <button 
+              type="submit" 
+              className="auth-submit-btn" 
+              disabled={loading || checkingEmail || (!isLoginView && emailExists)}
+            >
+              {loading ? t('auth.processing', 'Processing...') : (isLoginView ? t('auth.login', 'Log in') : t('auth.signup', 'Sign up'))}
+            </button>
+          </form>
+          
+          <div className="auth-footer">
+            {isLoginView && (
+              <button type="button" className="forgot-btn" onClick={() => navigate('/forgot-password')}>
+                {t('auth.forgot_password', 'Forgot password?')}
+              </button>
+            )}
+            <p className="switch-text">
+              {isLoginView ? t('auth.no_account', "Don't have an account?") : t('auth.already_have_account', "Already have an account?")}
+              <button className="switch-btn" onClick={() => setIsLoginView(!isLoginView)}>
+                {isLoginView ? t('auth.need_account_signup', 'Sign up') : t('auth.have_account_login', 'Log in')}
+              </button>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
