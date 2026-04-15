@@ -3,7 +3,7 @@ self.addEventListener('push', function (event) {
   if (event.data) {
     let payloadTitle = 'New Notification';
     let payloadOptions = {
-        icon: '/vite.svg',
+        icon: '/icon-192.png',
         vibrate: [100, 50, 100],
         data: { dateOfArrival: Date.now(), url: '/' }
     };
