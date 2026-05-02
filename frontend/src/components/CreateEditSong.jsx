@@ -97,21 +97,79 @@ function CreateEditSong({ token, BASE_URL }) {
   };
 
   // ── Music sheet: select files ────────────────
-  const handleSheetFilesSelect = (files) => {
+  // ── Music sheet: select files → upload immediately ──────────
+  const handleSheetFilesSelect = async (files) => {
+    if (musicSheets.length >= MAX_SHEETS) return;
+    const slots = MAX_SHEETS - musicSheets.length;
+    const filesToAdd = Array.from(files).slice(0, slots);
+    if (filesToAdd.length === 0) return;
+
+    // First: add all files to the list immediately with 'uploading' status
+    const newEntries = filesToAdd.map(file => ({
+      localId: Math.random().toString(36).substr(2, 9),
+      driveId: null,
+      name: file.name,
+      url: null,
+      type: file.type,
+      status: 'uploading',
+      file,
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+    }));
+
+    setMusicSheets(prev => [...prev, ...newEntries]);
+
+    // Then: upload each file immediately to Drive
+    const currentTitle = formData.title.trim() || 'Untitled';
+    const results = await Promise.allSettled(
+      newEntries.map(async (entry) => {
+        const reader = new FileReader();
+        const base64 = await new Promise((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(entry.file);
+        });
+        const res = await fetch(`${BASE_URL}/api/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({
+            file: base64,
+            filename: entry.name,
+            folder: 'song',
+            songTitle: currentTitle,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Upload failed');
+        return { localId: entry.localId, data };
+      })
+    );
+
+    // Update each entry's status based on upload result
     setMusicSheets(prev => {
-      const slots = MAX_SHEETS - prev.length;
-      if (slots <= 0) return prev;
-      const newEntries = Array.from(files).slice(0, slots).map(file => ({
-        localId: Math.random().toString(36).substr(2, 9),
-        driveId: null,
-        name: file.name,
-        url: null,
-        type: file.type,
-        status: 'pending',
-        file,
-        preview: URL.createObjectURL(file),
-      }));
-      return [...prev, ...newEntries];
+      const updated = [...prev];
+      results.forEach((result, idx) => {
+        const localId = newEntries[idx].localId;
+        const sheetIdx = updated.findIndex(s => s.localId === localId);
+        if (sheetIdx === -1) return;
+        if (result.status === 'fulfilled') {
+          const { data } = result.value;
+          updated[sheetIdx] = {
+            ...updated[sheetIdx],
+            driveId: data.driveId,
+            url: data.url,
+            type: data.contentType || updated[sheetIdx].type,
+            status: 'done',
+            file: null,
+          };
+        } else {
+          updated[sheetIdx] = {
+            ...updated[sheetIdx],
+            status: 'error',
+            error: result.reason?.message || 'Upload failed',
+          };
+        }
+      });
+      return updated;
     });
   };
 
@@ -225,7 +283,8 @@ function CreateEditSong({ token, BASE_URL }) {
 
   if (loading) return <div>Loading...</div>;
 
-  const pendingCount = musicSheets.filter(s => s.status === 'pending').length;
+  const uploadingCount = musicSheets.filter(s => s.status === 'uploading').length;
+  const isDocUploading = uploadingCount > 0;
 
   return (
     <div className="events-container">
@@ -361,6 +420,14 @@ function CreateEditSong({ token, BASE_URL }) {
                       style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ddd' }}
                     />
                   )}
+                  {/* Uploaded image preview from Drive URL (for existing or just uploaded) */}
+                  {!sheet.preview && sheet.status === 'done' && sheet.url && sheet.type?.startsWith('image/') && (
+                    <img
+                      src={`${BASE_URL}${sheet.url}`}
+                      alt={sheet.name}
+                      style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ddd' }}
+                    />
+                  )}
 
                   {/* Remove button */}
                   <button
@@ -395,10 +462,12 @@ function CreateEditSong({ token, BASE_URL }) {
           style={{ minHeight: '200px' }}
         />
 
-        <button type="submit" disabled={uploading || imageUploading}>
-          {uploading
-            ? pendingCount > 0 ? `Uploading ${pendingCount} file(s)…` : 'Saving…'
-            : isEdit ? 'Update Song' : 'Create Song'}
+        <button type="submit" disabled={uploading || imageUploading || isDocUploading}>
+          {isDocUploading
+            ? `Uploading ${uploadingCount} file(s)…`
+            : uploading
+              ? 'Saving…'
+              : isEdit ? 'Update Song' : 'Create Song'}
         </button>
       </form>
     </div>
