@@ -1,9 +1,14 @@
 const supabase = require('../../db');
 const { authenticateToken } = require('../../middleware/auth');
-const { cors, runMiddleware } = require('../../middleware/cors');
+const webpush = require('web-push');
+
+webpush.setVapidDetails(
+    'mailto:demo@example.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
 
 export default async function handler(req, res) {
-    await runMiddleware(req, res, cors);
 
     const user = await authenticateToken(req);
 
@@ -15,14 +20,26 @@ export default async function handler(req, res) {
                 .select('*, event_likes(count)')
                 .order('date', { ascending: true });
 
-            if (error) throw error;
-            
-            const eventsWithCounts = data.map(event => ({
-                ...event,
-                likes_count: event.event_likes[0]?.count || 0
-            }));
+            if (error) {
+                console.error('Database query error in events.js:', error);
+                return res.status(500).json({ error: error.message, details: error.details });
+            }
+
+            const eventsWithCounts = (data || []).map(event => {
+                let likesCount = 0;
+                if (Array.isArray(event.event_likes)) {
+                    likesCount = event.event_likes[0]?.count || 0;
+                } else if (event.event_likes && typeof event.event_likes === 'object') {
+                    likesCount = event.event_likes.count || 0;
+                }
+                return {
+                    ...event,
+                    likes_count: likesCount
+                };
+            });
             res.json(eventsWithCounts);
         } catch (err) {
+            console.error('Unhandled error in events GET:', err);
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'POST') {
@@ -62,7 +79,33 @@ export default async function handler(req, res) {
                 .select();
 
             if (error) throw error;
-            res.status(201).json(data[0]);
+            const newEvent = data[0];
+
+            try {
+                const { data: subscriptions } = await supabase
+                    .from('push_subscriptions')
+                    .select('*');
+
+                if (subscriptions && subscriptions.length > 0) {
+                    const payload = JSON.stringify({
+                        title: `New Event: ${newEvent.title}`,
+                        body: newEvent.description || 'A new event was just created.',
+                        url: `${process.env.VITE_FRONTEND_URL || 'http://localhost:3000'}/events/${newEvent.id}`
+                    });
+
+                    await Promise.all(subscriptions.map(sub =>
+                        webpush.sendNotification(sub.subscription, payload).catch(err => {
+                            if (err.statusCode === 410) {
+                                supabase.from('push_subscriptions').delete().eq('id', sub.id).then();
+                            }
+                        })
+                    ));
+                }
+            } catch (pushErr) {
+                console.error("Failed to send push notifications", pushErr);
+            }
+
+            res.status(201).json(newEvent);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }

@@ -1,161 +1,215 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function SalvationCommitmentForm({ BASE_URL }) {
+  const { t } = useTranslation();
+
+  const decisions = [
+    { value: 'I followed Jesus today', label: t('salvation.form.decision1.label'), desc: t('salvation.form.decision1.desc') },
+    { value: 'I want to learn more', label: t('salvation.form.decision2.label'), desc: t('salvation.form.decision2.desc') },
+    { value: 'I need prayer', label: t('salvation.form.decision3.label'), desc: t('salvation.form.decision3.desc') },
+  ];
+
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     email: '',
     phone: '',
-    decision_type: ''
+    decision_type: '',
   });
-  const [status, setStatus] = useState('idle'); // idle, submitting, success, error
+  const [status, setStatus] = useState('idle');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.decision_type) {
-      alert("Please select a decision.");
-      return;
-    }
+    if (!formData.decision_type) { alert(t('salvation.form.alert')); return; }
     setStatus('submitting');
-
     try {
-      const response = await fetch(`${BASE_URL}/api/salvation/commit`, {
+      const res = await fetch(`${BASE_URL}/api/salvation/commit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, decision_type: formData.decision_type || 'I accepted Jesus today' })
+        body: JSON.stringify(formData),
       });
-
-      if (response.ok) {
-        setStatus('success');
-      } else {
-        setStatus('error');
-      }
-    } catch (error) {
-      console.error(error);
+      setStatus(res.ok ? 'success' : 'error');
+    } catch {
       setStatus('error');
     }
   };
 
   if (status === 'success') {
     return (
-      <div className="py-32 px-6 bg-zinc-50 flex items-center justify-center min-h-[600px]">
+      <div className="salvation-form-root" id="commitment" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.92, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="bg-white p-12 md:p-20 rounded-[2.5rem] shadow-sm max-w-2xl w-full text-center border border-zinc-200/50"
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          style={{ textAlign: 'center', maxWidth: '520px', width: '100%' }}
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: "spring", delay: 0.3, duration: 0.8 }}
-            className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-8"
+            transition={{ type: 'spring', delay: 0.3, stiffness: 200 }}
+            style={{
+              width: '88px', height: '88px', borderRadius: '50%',
+              background: 'rgba(184,125,0,0.15)',
+              border: '1px solid rgba(184,125,0,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 32px', fontSize: '2.5rem',
+            }}
           >
-            <CheckCircle2 size={36} className="text-orange-500" />
+            ✨
           </motion.div>
-          <h2 className="text-4xl md:text-5xl font-black mb-6 text-zinc-900 tracking-tighter uppercase">Thank You</h2>
-          <p className="text-zinc-600 font-medium text-lg leading-relaxed">We have received your decision and someone from our team will reach out to you shortly to walk this journey with you.</p>
+          <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', textTransform: 'uppercase', margin: '0 0 20px' }}>
+            {t('salvation.form.success.title')}
+          </h2>
+          <div style={{ width: '40px', height: '2px', background: 'linear-gradient(90deg,#B87D00,#f5c842)', borderRadius: '99px', margin: '0 auto 24px' }} />
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem', lineHeight: 1.8 }}>
+            {t('salvation.form.success.desc')}
+          </p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="py-24 px-6 bg-zinc-50 flex items-center justify-center">
-      <div className="w-full max-w-4xl">
-        <div className="bg-white border-2 border-black/5 p-8 md:p-12 rounded-[3rem] shadow-xl">
-          <h3 className="text-3xl font-black text-center mb-10">I Made a Decision</h3>
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-gray-400">First Name</label>
-                <input
-                  type="text"
-                  placeholder="Jane"
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                  value={formData.first_name}
-                  onChange={e => setFormData({ ...formData, first_name: e.target.value })}
-                />
+    <div className="salvation-form-root" id="commitment">
+      <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          style={{ textAlign: 'center', marginBottom: '56px' }}
+        >
+          <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#B87D00', marginBottom: '16px' }}>{t('salvation.form.eyebrow')}</p>
+          <h2 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', fontWeight: 900, color: '#fff', letterSpacing: '-0.04em', textTransform: 'uppercase', margin: '0 0 16px' }}>
+            {t('salvation.form.title')}
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.95rem', lineHeight: 1.7, margin: 0 }}>
+            {t('salvation.form.subtitle')}
+          </p>
+        </motion.div>
+
+        {/* Decision selector cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '40px' }}
+        >
+          {decisions.map((d) => (
+            <button
+              key={d.value}
+              type="button"
+              onClick={() => setFormData({ ...formData, decision_type: d.value })}
+              className={`salvation-decision-card${formData.decision_type === d.value ? ' selected' : ''}`}
+            >
+              {/* Radio dot */}
+              <div style={{
+                width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
+                border: `2px solid ${formData.decision_type === d.value ? '#B87D00' : 'rgba(255,255,255,0.2)'}`,
+                background: formData.decision_type === d.value ? '#B87D00' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.25s',
+              }}>
+                {formData.decision_type === d.value && (
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />
+                )}
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-gray-400">Last Name</label>
-                <input
-                  type="text"
-                  placeholder="Doe"
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                  value={formData.last_name}
-                  onChange={e => setFormData({ ...formData, last_name: e.target.value })}
-                />
+              <div>
+                <div style={{ color: formData.decision_type === d.value ? '#f5c842' : '#fff', fontWeight: 700, fontSize: '0.95rem', marginBottom: '2px', transition: 'color 0.25s' }}>
+                  {d.label}
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.8rem' }}>{d.desc}</div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase text-gray-400">Email Address</label>
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Form fields */}
+        <motion.form
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label>{t('salvation.form.first_name')}</label>
               <input
-                type="email"
-                placeholder="jane@example.com"
-                required
-                className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                value={formData.email}
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                type="text" placeholder="Jane" required
+                value={formData.first_name}
+                onChange={e => setFormData({ ...formData, first_name: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-gray-400">Phone Number (Optional)</label>
-                <input
-                  type="tel"
-                  placeholder="+1 (555) 000-0000"
-                  className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                  value={formData.phone}
-                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-gray-400">My Decision</label>
-                <select
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-black/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                  value={formData.decision_type}
-                  onChange={e => setFormData({ ...formData, decision_type: e.target.value })}
-                >
-                  <option value="" disabled>Select a decision...</option>
-                  <option value="I followed Jesus today">I followed Jesus today</option>
-                  <option value="I want to learn more">I want to learn more</option>
-                  <option value="I need prayer">I need prayer</option>
-                </select>
-              </div>
+            <div>
+              <label>{t('salvation.form.last_name')}</label>
+              <input
+                type="text" placeholder="Doe" required
+                value={formData.last_name}
+                onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+              />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={status === 'submitting'}
-              className="w-full py-4 bg-[#B87D00] text-white font-bold rounded-xl hover:bg-[#966600] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {status === 'submitting' ? (
-                "SUBMITTING..."
-              ) : (
-                <>SUBMIT DECISION <Send size={18} /></>
-              )}
-            </button>
+          <div>
+            <label>{t('salvation.form.email')}</label>
+            <input
+              type="email" placeholder="jane@example.com" required
+              value={formData.email}
+              onChange={e => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
 
-            <AnimatePresence>
-              {status === 'error' && (
-                <motion.p
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="text-red-500 text-center text-sm font-medium"
-                >
-                  Something went wrong. Please try again.
-                </motion.p>
-              )}
-            </AnimatePresence>
-          </form>
-        </div>
+          <div>
+            <label>
+              {t('salvation.form.phone')}{' '}
+              <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400, textTransform: 'none', letterSpacing: 'normal', fontSize: '0.75rem' }}>{t('salvation.form.optional')}</span>
+            </label>
+            <input
+              type="tel" placeholder="+1 (555) 000-0000"
+              value={formData.phone}
+              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={status === 'submitting'}
+            className="salvation-submit-btn"
+          >
+            {status === 'submitting' ? (
+              <span>{t('salvation.form.submitting')}</span>
+            ) : (
+              <>
+                <span>{t('salvation.form.submit')}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </>
+            )}
+          </button>
+
+          <AnimatePresence>
+            {status === 'error' && (
+              <motion.p
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ opacity: 0, height: 0 }}
+                style={{ color: '#ff6b6b', textAlign: 'center', fontSize: '0.875rem', margin: 0 }}
+              >
+                {t('salvation.form.error')}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.form>
       </div>
     </div>
   );

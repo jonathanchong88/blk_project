@@ -71,12 +71,12 @@ function Activities({ token, BASE_URL }) {
       reader.onload = (e) => {
         setUploadFiles(prev => [
           ...prev,
-          { 
-            file, 
-            preview: e.target.result, 
+          {
+            file,
+            preview: e.target.result,
             id: Math.random().toString(36).substr(2, 9),
             status: 'pending', // pending, uploading, success, error
-            error: '' 
+            error: ''
           }
         ]);
       };
@@ -108,49 +108,49 @@ function Activities({ token, BASE_URL }) {
     setBatchUploading(true);
 
     const updatedFiles = [...uploadFiles];
-    
+
     for (let i = 0; i < updatedFiles.length; i++) {
-        if (updatedFiles[i].status === 'success') continue;
+      if (updatedFiles[i].status === 'success') continue;
 
-        updatedFiles[i].status = 'uploading';
-        setUploadFiles([...updatedFiles]);
+      updatedFiles[i].status = 'uploading';
+      setUploadFiles([...updatedFiles]);
 
-        try {
-            const res = await fetch(`${BASE_URL}/api/gallery`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ 
-                    image: updatedFiles[i].preview, 
-                    filename: updatedFiles[i].file.name 
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
-            
-            updatedFiles[i].status = 'success';
-        } catch (err) {
-            updatedFiles[i].status = 'error';
-            updatedFiles[i].error = err.message;
-        }
-        setUploadFiles([...updatedFiles]);
+      try {
+        const res = await fetch(`${BASE_URL}/api/gallery`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            image: updatedFiles[i].preview,
+            filename: updatedFiles[i].file.name
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.message || 'Upload failed');
+
+        updatedFiles[i].status = 'success';
+      } catch (err) {
+        updatedFiles[i].status = 'error';
+        updatedFiles[i].error = err.message;
+      }
+      setUploadFiles([...updatedFiles]);
     }
 
     const allFinished = updatedFiles.every(f => f.status === 'success' || f.status === 'error');
     if (allFinished) {
-        const hasErrors = updatedFiles.some(f => f.status === 'error');
-        if (!hasErrors) {
-            setTimeout(() => {
-                resetUpload();
-                setSort('desc');
-                setPage(1);
-                fetchImages(1, 'desc');
-            }, 1000);
-        } else {
-            setBatchUploading(false);
-        }
+      const hasErrors = updatedFiles.some(f => f.status === 'error');
+      if (!hasErrors) {
+        setTimeout(() => {
+          resetUpload();
+          setSort('desc');
+          setPage(1);
+          fetchImages(1, 'desc');
+        }, 1000);
+      } else {
+        setBatchUploading(false);
+      }
     }
   };
 
@@ -159,7 +159,9 @@ function Activities({ token, BASE_URL }) {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const encodedName = encodeURIComponent(deleteTarget.name);
+      // Prioritize 'id' (Google Drive fileId) over 'name' for deletions
+      const targetId = deleteTarget.id || deleteTarget.name;
+      const encodedName = encodeURIComponent(targetId);
       const res = await fetch(`${BASE_URL}/api/gallery/${encodedName}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -268,37 +270,43 @@ function Activities({ token, BASE_URL }) {
         </div>
       ) : (
         <div className="gallery-grid">
-          {images.map((img, idx) => (
-            <div
-              key={img.name}
-              className="gallery-card"
-              onClick={() => setLightbox({ ...img, index: idx })}
-            >
-              <div className="gallery-card-img-wrap">
-                <img src={img.url} alt={img.name} loading="lazy" />
-                <div className="gallery-card-overlay">
-                  {token && (
-                    <button
-                      className="gallery-delete-btn"
-                      title="Delete"
-                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(img); }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-                      </svg>
-                    </button>
-                  )}
-                  <svg className="gallery-zoom-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    <line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
-                  </svg>
+          {images.map((img, idx) => {
+            return (
+              <div
+                key={img.name}
+                className="gallery-card"
+                onClick={() => setLightbox({ ...img, index: idx })}
+              >
+                <div className="gallery-card-img-wrap">
+                  <img
+                    src={img.url.startsWith('http') ? img.url : `${BASE_URL}${img.url}`}
+                    alt={img.name}
+                    loading="lazy"
+                  />
+                  <div className="gallery-card-overlay">
+                    {token && (
+                      <button
+                        className="gallery-delete-btn"
+                        title="Delete"
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(img); }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
+                        </svg>
+                      </button>
+                    )}
+                    <svg className="gallery-zoom-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      <line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
+                    </svg>
+                  </div>
                 </div>
+                {img.createdAt && (
+                  <div className="gallery-card-date">{formatDate(img.createdAt)}</div>
+                )}
               </div>
-              {img.createdAt && (
-                <div className="gallery-card-date">{formatDate(img.createdAt)}</div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -372,57 +380,57 @@ function Activities({ token, BASE_URL }) {
                 {uploadFiles.map((fileObj) => (
                   <div key={fileObj.id} className={`upload-preview-item ${fileObj.status}`}>
                     <img src={fileObj.preview} alt="Preview" className="upload-preview-thumb" />
-                    
+
                     {fileObj.status === 'pending' && (
-                        <button 
-                            className="preview-remove-btn" 
-                            onClick={() => removeUploadFile(fileObj.id)}
-                            title="Remove"
-                        >✕</button>
+                      <button
+                        className="preview-remove-btn"
+                        onClick={() => removeUploadFile(fileObj.id)}
+                        title="Remove"
+                      >✕</button>
                     )}
 
                     {fileObj.status === 'uploading' && (
-                        <div className="preview-overlay">
-                            <div className="preview-spinner small"></div>
-                        </div>
+                      <div className="preview-overlay">
+                        <div className="preview-spinner small"></div>
+                      </div>
                     )}
 
                     {fileObj.status === 'success' && (
-                        <div className="preview-overlay success">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                                <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                        </div>
+                      <div className="preview-overlay success">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
                     )}
 
                     {fileObj.status === 'error' && (
-                        <div className="preview-overlay error" title={fileObj.error}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </div>
+                      <div className="preview-overlay error" title={fileObj.error}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </div>
                     )}
                   </div>
                 ))}
-                
-                <div 
-                    className="add-more-previews" 
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Add more photos"
+
+                <div
+                  className="add-more-previews"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Add more photos"
                 >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        style={{ display: 'none' }}
-                        onChange={onFileInputChange}
-                    />
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={onFileInputChange}
+                  />
                 </div>
               </div>
             )}
@@ -460,7 +468,7 @@ function Activities({ token, BASE_URL }) {
             >‹</button>
           )}
           <img
-            src={lightbox.url}
+            src={lightbox.url.startsWith('http') ? lightbox.url : `${BASE_URL}${lightbox.url}`}
             alt={lightbox.name}
             className="lightbox-img"
             onClick={e => e.stopPropagation()}

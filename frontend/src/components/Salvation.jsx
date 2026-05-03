@@ -6,7 +6,7 @@ import SalvationCommitmentForm from './SalvationCommitmentForm';
 
 function Salvation({ BASE_URL }) {
   return (
-    <div className="salvation-page bg-white min-h-screen">
+    <div style={{ background: '#0a0a0a', minHeight: '100vh' }}>
       <SalvationHero />
       <SalvationTeaching />
       <SalvationFAQ />

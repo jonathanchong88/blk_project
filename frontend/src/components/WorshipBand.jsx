@@ -1,6 +1,6 @@
-// frontend/src/components/WorshipBand.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const ROLE_IMAGES = {
   'Worship Leader': 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&w=800&q=80',
@@ -16,6 +16,7 @@ const ROLE_IMAGES = {
 };
 
 function WorshipBand({ token, BASE_URL, userRole }) {
+  const { t } = useTranslation();
   const [team, setTeam] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('');
@@ -80,7 +81,7 @@ function WorshipBand({ token, BASE_URL, userRole }) {
   const handleAddMember = async (e) => {
     e.preventDefault();
     if (!newMember.name) {
-      alert('Please select a member from the list.');
+      alert(t('worship.band.alert.select_member'));
       return;
     }
     setSubmitting(true);
@@ -102,7 +103,7 @@ function WorshipBand({ token, BASE_URL, userRole }) {
         setEditingId(null);
         fetchTeam(); // Refresh list
       } else {
-        alert(`Failed to ${editingId ? 'update' : 'add'} member`);
+        alert(editingId ? t('worship.band.alert.failed_update') : t('worship.band.alert.failed_add'));
       }
     } catch (error) {
       console.error('Error saving member:', error);
@@ -159,24 +160,24 @@ function WorshipBand({ token, BASE_URL, userRole }) {
     ? team.filter(member => member.roles.includes(filterRole))
     : team;
 
-  if (loading) return <div style={{ padding: '20px' }}>Loading team...</div>;
+  if (loading) return <div style={{ padding: '20px' }}>{t('worship.band.loading_team')}</div>;
 
   return (
     <div className="events-container">
       <div className="events-header">
-        <h2>Worship Team</h2>
+        <h2>{t('worship.band.title')}</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
             <button 
                 onClick={() => setViewMode('roles')}
                 style={{ padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer', backgroundColor: viewMode === 'roles' ? '#007bff' : '#eee', color: viewMode === 'roles' ? 'white' : '#333' }}
             >
-                Roles
+                {t('worship.band.roles')}
             </button>
             <button 
                 onClick={() => setViewMode('members')}
                 style={{ padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer', backgroundColor: viewMode === 'members' ? '#007bff' : '#eee', color: viewMode === 'members' ? 'white' : '#333' }}
             >
-                All Members
+                {t('worship.band.all_members')}
             </button>
         </div>
         {token && ['admin', 'developer', 'editor'].includes(userRole) && (
@@ -184,7 +185,7 @@ function WorshipBand({ token, BASE_URL, userRole }) {
             className="view-all-btn"
             onClick={openAddModal}
           >
-            + Add Member
+            {t('worship.band.add_member')}
           </button>
         )}
       </div>
@@ -216,13 +217,13 @@ function WorshipBand({ token, BASE_URL, userRole }) {
       ) : (
         <>
             <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <span style={{ fontWeight: 'bold', color: '#666' }}>Filter by Role:</span>
+                <span style={{ fontWeight: 'bold', color: '#666' }}>{t('worship.band.filter_by_role')}</span>
                 <select 
                 value={filterRole} 
                 onChange={(e) => setFilterRole(e.target.value)}
                 style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                 >
-                <option value="">All Roles</option>
+                <option value="">{t('worship.band.all_roles')}</option>
                 {allRoles.map(role => (
                     <option key={role} value={role}>{role}</option>
                 ))}
@@ -287,7 +288,7 @@ function WorshipBand({ token, BASE_URL, userRole }) {
             
             {filteredTeam.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
-                No team members found matching this filter.
+                {t('worship.band.no_members_found')}
                 </div>
             )}
         </>
@@ -299,11 +300,11 @@ function WorshipBand({ token, BASE_URL, userRole }) {
           backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
         }}>
           <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3>{editingId ? 'Edit Team Member' : 'Add New Team Member'}</h3>
+            <h3>{editingId ? t('worship.band.edit_member_title') : t('worship.band.add_member_title')}</h3>
             <form onSubmit={handleAddMember} className="event-form">
               {users.length > 0 ? (
                 <div style={{ marginBottom: '15px', position: 'relative' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Select Member:</label>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>{t('worship.band.select_member')}</label>
                   
                   <div 
                     onClick={() => setShowUserDropdown(!showUserDropdown)}
@@ -319,7 +320,7 @@ function WorshipBand({ token, BASE_URL, userRole }) {
                     }}
                   >
                     <span style={{ color: newMember.name ? 'black' : '#888' }}>
-                      {newMember.name ? newMember.name : '-- Select User --'}
+                      {newMember.name ? newMember.name : t('worship.band.select_user_placeholder')}
                     </span>
                     <span style={{ fontSize: '0.8rem' }}>▼</span>
                   </div>
@@ -342,7 +343,7 @@ function WorshipBand({ token, BASE_URL, userRole }) {
                       <div style={{ padding: '8px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, background: 'white' }}>
                         <input 
                           type="text" 
-                          placeholder="Search member..." 
+                          placeholder={t('worship.band.search_member_placeholder')} 
                           value={userSearchQuery}
                           onChange={(e) => setUserSearchQuery(e.target.value)}
                           onClick={(e) => e.stopPropagation()}
@@ -399,35 +400,35 @@ function WorshipBand({ token, BASE_URL, userRole }) {
                         </div>
                       ))}
                       {users.filter(u => (u.name || u.username).toLowerCase().includes(userSearchQuery.toLowerCase())).length === 0 && (
-                        <div style={{ padding: '15px', textAlign: 'center', color: '#888' }}>No users found</div>
+                        <div style={{ padding: '15px', textAlign: 'center', color: '#888' }}>{t('worship.band.no_users_found')}</div>
                       )}
                     </div>
                   )}
                 </div>
               ) : (
-                <div style={{ padding: '10px', color: '#666' }}>No members available to select.</div>
+                <div style={{ padding: '10px', color: '#666' }}>{t('worship.band.no_members_available')}</div>
               )}
 
               {newMember.name && (
                 <div style={{ marginBottom: '15px', padding: '15px', background: '#f8f9fa', borderRadius: '6px', border: '1px solid #eee' }}>
-                    <div style={{ marginBottom: '5px' }}><span style={{ fontWeight: '600', color: '#555' }}>Email:</span> {newMember.email || '-'}</div>
-                    <div style={{ marginBottom: '10px' }}><span style={{ fontWeight: '600', color: '#555' }}>Phone:</span> {newMember.phone || '-'}</div>
+                    <div style={{ marginBottom: '5px' }}><span style={{ fontWeight: '600', color: '#555' }}>{t('worship.band.label.email')}</span> {newMember.email || '-'}</div>
+                    <div style={{ marginBottom: '10px' }}><span style={{ fontWeight: '600', color: '#555' }}>{t('worship.band.label.phone')}</span> {newMember.phone || '-'}</div>
                     
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '0.9rem' }}>Sex</label>
+                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '0.9rem' }}>{t('worship.band.label.sex')}</label>
                             <select 
                                 value={newMember.sex || ''} 
                                 onChange={e => setNewMember({...newMember, sex: e.target.value})}
                                 style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                             >
-                                <option value="">Select...</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
+                                <option value="">{t('worship.band.select_placeholder')}</option>
+                                <option value="Male">{t('worship.band.male')}</option>
+                                <option value="Female">{t('worship.band.female')}</option>
                             </select>
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '0.9rem' }}>Age</label>
+                            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '0.9rem' }}>{t('worship.band.label.age')}</label>
                             <input 
                                 type="number" 
                                 value={newMember.age || ''} 
@@ -440,7 +441,7 @@ function WorshipBand({ token, BASE_URL, userRole }) {
               )}
               
               <div style={{ margin: '15px 0' }}>
-                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Roles / Skills:</label>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>{t('worship.band.label.roles_skills')}</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                   {availableRoles.map(role => (
                     <label key={role.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#f5f5f5', padding: '5px 10px', borderRadius: '15px', cursor: 'pointer' }}>
@@ -461,9 +462,9 @@ function WorshipBand({ token, BASE_URL, userRole }) {
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button type="button" onClick={() => setShowModal(false)} style={{ backgroundColor: '#6c757d', flex: 1 }}>Cancel</button>
+                <button type="button" onClick={() => setShowModal(false)} style={{ backgroundColor: '#6c757d', flex: 1 }}>{t('worship.band.button.cancel')}</button>
                 <button type="submit" disabled={submitting} style={{ flex: 1 }}>
-                  {submitting ? 'Saving...' : (editingId ? 'Update Member' : 'Add Member')}
+                  {submitting ? t('worship.band.button.saving') : (editingId ? t('worship.band.button.update_member') : t('worship.band.button.add_member'))}
                 </button>
               </div>
             </form>

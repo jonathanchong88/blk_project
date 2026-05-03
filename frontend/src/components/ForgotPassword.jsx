@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { useTranslation } from 'react-i18next';
 
 function ForgotPassword() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -27,9 +29,9 @@ function ForgotPassword() {
 
       if (error) throw error;
 
-      setMessage('If an account exists with this email, you will receive a password reset link shortly.');
+      setMessage(t('auth.forgot_password_success'));
     } catch (err) {
-      setError(err.message || 'An error occurred. Please try again.');
+      setError(err.message || t('auth.forgot_password_error'));
     } finally {
       setLoading(false);
     }
@@ -37,14 +39,14 @@ function ForgotPassword() {
 
   return (
     <div className="auth-container" style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: 'white' }}>
-      <h2>Forgot Password</h2>
-      <p style={{ fontSize: '0.9rem', color: '#666' }}>Enter your email address and we'll send you a link to reset your password.</p>
+      <h2>{t('auth.forgot_password_title')}</h2>
+      <p style={{ fontSize: '0.9rem', color: '#666' }}>{t('auth.forgot_password_instructions')}</p>
       {message && <div style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', marginBottom: '15px' }}>{message}</div>}
       {error && <div style={{ padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '15px' }}>{error}</div>}
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Email</label>
+          <label style={{ display: 'block', marginBottom: '5px' }}>{t('auth.email_label')}</label>
           <input
             type="email"
             value={email}
@@ -54,10 +56,10 @@ function ForgotPassword() {
           />
         </div>
         <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          {loading ? 'Sending...' : 'Send Reset Link'}
+          {loading ? t('auth.sending') : t('auth.send_reset_link')}
         </button>
       </form>
-      <button onClick={() => navigate('/login')} style={{ marginTop: '15px', background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', width: '100%' }}>Back to Login</button>
+      <button onClick={() => navigate('/login')} style={{ marginTop: '15px', background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', width: '100%' }}>{t('auth.back_to_login')}</button>
     </div>
   );
 }

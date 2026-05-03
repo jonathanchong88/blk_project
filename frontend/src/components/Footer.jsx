@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Phone, Printer, Smartphone, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import './Footer.css';
 
 const FacebookIcon = () => (
@@ -21,18 +22,20 @@ const YouTubeIcon = () => (
 );
 
 function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="site-footer">
       <div className="footer-main">
         {/* Contact Info */}
         <div className="footer-contact">
-          <h3 className="footer-section-title">Contact Info</h3>
+          <h3 className="footer-section-title">{t('footer.contact_info')}</h3>
 
           <div className="footer-info-row">
             <span className="footer-icon"><MapPin size={18} /></span>
             <div>
-              <p className="footer-label">Address:</p>
-              <p className="footer-text">No 301,KB 1/5, Kampung Baru Selangor, Seri Kembangan,43300, Selangor, Malaysia</p>
+              <p className="footer-label">{t('footer.address')}</p>
+              <p className="footer-text">{t('footer.address_text')}</p>
             </div>
           </div>
 
@@ -40,14 +43,14 @@ function Footer() {
             <div className="footer-inline-item">
               <span className="footer-icon"><Phone size={18} /></span>
               <div>
-                <p className="footer-label">Phone:</p>
+                <p className="footer-label">{t('footer.phone')}</p>
                 <p className="footer-text">+603-8961 1595</p>
               </div>
             </div>
             <div className="footer-inline-item">
               <span className="footer-icon"><Smartphone size={18} /></span>
               <div>
-                <p className="footer-label">Email:</p>
+                <p className="footer-label">{t('footer.email')}</p>
                 <p className="footer-text">lcmsbalakong@gmail.com</p>
               </div>
             </div>
@@ -56,7 +59,7 @@ function Footer() {
           <div className="footer-info-row">
             <span className="footer-icon"><Clock size={18} /></span>
             <div>
-              <p className="footer-label">Opening hours:</p>
+              <p className="footer-label">{t('footer.opening_hours')}</p>
               <p className="footer-text">7:30AM - 9PM</p>
             </div>
           </div>
@@ -64,7 +67,7 @@ function Footer() {
 
         {/* Socials */}
         <div className="footer-socials">
-          <h3 className="footer-section-title">Socials</h3>
+          <h3 className="footer-section-title">{t('footer.socials')}</h3>
           <div className="footer-social-icons">
             <a
               href="https://www.facebook.com/balakong.powerstation"
@@ -99,8 +102,8 @@ function Footer() {
 
       {/* Bottom Bar */}
       <div className="footer-bottom">
-        <p className="footer-copyright">Copyright © 2026 - Lutheran Church in Balakong</p>
-        <a href="/privacy-policy" className="footer-privacy-link">Privacy Policy</a>
+        <p className="footer-copyright">{t('footer.copyright')}</p>
+        <a href="/privacy-policy" className="footer-privacy-link">{t('footer.privacy_policy')}</a>
       </div>
     </footer>
   );

@@ -1,20 +1,6 @@
 import db from '../../../db';
 import { authenticateToken } from '../../../middleware/auth';
-import { cors } from '../../../middleware/cors';
-
-function runMiddleware(req, res, fn) {
-  return new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
-      if (result instanceof Error) {
-        return reject(result);
-      }
-      return resolve(result);
-    });
-  });
-}
-
 export default async function handler(req, res) {
-  await runMiddleware(req, res, cors);
   const user = await authenticateToken(req);
   if (!user) return res.status(401).json({ message: 'Unauthorized' });
 

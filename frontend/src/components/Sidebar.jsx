@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 function Sidebar({ userRole }) {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(window.innerWidth > 768);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
@@ -59,37 +61,40 @@ function Sidebar({ userRole }) {
         </div>
         <nav className="sidebar-nav">
           <NavLink to="/" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            Home
+            {t('sidebar.home')}
           </NavLink>
           <NavLink to="/events" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            Events
+            {t('sidebar.events')}
           </NavLink>
           <NavLink to="/salvation" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            Salvation
+            {t('sidebar.salvation')}
           </NavLink>
           <NavLink to="/activities" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            Activities
+            {t('sidebar.activities')}
+          </NavLink>
+          <NavLink to="/news" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            {t('sidebar.news')}
           </NavLink>
           {canManageUsers && (
             <>
               <NavLink to="/users" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-                Users
+                {t('sidebar.users')}
               </NavLink>
               <NavLink to="/salvation/admin" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-                Commitments
+                {t('sidebar.commitments')}
               </NavLink>
             </>
           )}
 
-          <div className="sidebar-section-header">Worship</div>
+          <div className="sidebar-section-header">{t('sidebar.worship_section')}</div>
           <NavLink to="/worship/songs" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            Song
+            {t('sidebar.worship.songs')}
           </NavLink>
           <NavLink to="/worship/band" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            Band
+            {t('sidebar.worship.band')}
           </NavLink>
           <NavLink to="/worship/schedule" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            Schedule
+            {t('sidebar.worship.schedule')}
           </NavLink>
         </nav>
       </aside>

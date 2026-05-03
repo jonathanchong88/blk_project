@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 function UserList({ token, BASE_URL, userRole, currentUserId }) {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -36,12 +38,13 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
     fetchUsers();
   }, [token, BASE_URL, canViewUsers]);
 
-  if (loading) return <div>Loading users...</div>;
-  if (!canViewUsers) return <div style={{ padding: '20px', textAlign: 'center' }}>You do not have permission to view this page.</div>;
+  if (loading) return <div>{t('users.loading')}</div>;
+  if (!canViewUsers) return <div style={{ padding: '20px', textAlign: 'center' }}>{t('users.no_permission')}</div>;
 
   const toggleStatus = async (userId, currentStatus) => {
     const newStatus = currentStatus === false ? true : false;
-    if (!window.confirm(`Are you sure you want to ${newStatus ? 'activate' : 'deactivate'} this user?`)) return;
+    const confirmMessage = newStatus ? t('users.confirm.activate') : t('users.confirm.deactivate');
+    if (!window.confirm(confirmMessage)) return;
 
     try {
       const response = await fetch(`${BASE_URL}/api/users/status`, {
@@ -52,7 +55,7 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
       if (response.ok) {
         setUsers(users.map(u => u.id === userId ? { ...u, is_active: newStatus } : u));
       } else {
-        alert('Failed to update status');
+        alert(t('users.alert.status_fail'));
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -60,8 +63,8 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
   };
 
   const handleResetPassword = async (email) => {
-    if (!email) return alert("No email found for this user.");
-    if (!window.confirm(`Send password reset link to ${email}?`)) return;
+    if (!email) return alert(t('users.alert.no_email'));
+    if (!window.confirm(t('users.confirm.reset', { email }))) return;
 
     try {
       const response = await fetch(`${BASE_URL}/api/auth/forgot-password`, {
@@ -73,10 +76,10 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Reset link sent!');
+        alert(t('users.alert.reset_success'));
         if (data.testLink) console.log("Reset Link:", data.testLink);
       } else {
-        alert(data.message || 'Failed to send reset link');
+        alert(data.message || t('users.alert.reset_fail'));
       }
     } catch (error) {
       console.error('Error sending reset link:', error);
@@ -112,7 +115,7 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
   return (
     <div className="user-list-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>User List</h2>
+        <h2>{t('users.title')}</h2>
         <button 
           onClick={() => setIsFilterOpen(true)} 
           style={{ 
@@ -128,14 +131,14 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
           }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-          Filters
+          {t('users.button.filters')}
         </button>
       </div>
 
       <div style={{ marginBottom: '15px' }}>
         <input
           type="text"
-          placeholder="Search by username, name or phone..."
+          placeholder={t('users.search.placeholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ddd' }}
@@ -154,17 +157,17 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
             overflowY: 'auto'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-              <h3 style={{ margin: 0 }}>Filters</h3>
+              <h3 style={{ margin: 0 }}>{t('users.filters.title')}</h3>
               <button onClick={() => setIsFilterOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#666' }}>&times;</button>
             </div>
             
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.9rem', color: '#333' }}>Age Range</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.9rem', color: '#333' }}>{t('users.filters.age_range')}</label>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <div style={{ flex: 1 }}>
                     <input
                     type="number"
-                    placeholder="Min"
+                    placeholder={t('users.filters.min')}
                     value={minAge}
                     onChange={(e) => setMinAge(e.target.value)}
                     style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ddd' }}
@@ -173,7 +176,7 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
                 <div style={{ flex: 1 }}>
                     <input
                     type="number"
-                    placeholder="Max"
+                    placeholder={t('users.filters.max')}
                     value={maxAge}
                     onChange={(e) => setMaxAge(e.target.value)}
                     style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ddd' }}
@@ -187,13 +190,13 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
                 onClick={() => { setSearchQuery(''); setMinAge(''); setMaxAge(''); }}
                 style={{ flex: 1, padding: '10px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer', color: '#333' }}
                 >
-                Clear
+                {t('users.filters.clear')}
                 </button>
                 <button 
                 onClick={() => setIsFilterOpen(false)}
                 style={{ flex: 1, padding: '10px', backgroundColor: '#007bff', border: 'none', borderRadius: '4px', cursor: 'pointer', color: 'white' }}
                 >
-                Done
+                {t('users.filters.done')}
                 </button>
             </div>
           </div>
@@ -238,7 +241,7 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
                               whiteSpace: 'nowrap'
                           }}
                       >
-                          {user.is_active !== false ? 'Active' : 'Inactive'}
+                          {user.is_active !== false ? t('users.status.active') : t('users.status.inactive')}
                       </button>
                     ) : (
                       <span
@@ -252,7 +255,7 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
                               whiteSpace: 'nowrap'
                           }}
                       >
-                          {user.is_active !== false ? 'Active' : 'Inactive'}
+                          {user.is_active !== false ? t('users.status.active') : t('users.status.inactive')}
                       </span>
                     )}
                 </div>
@@ -263,7 +266,7 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
                     <button 
                       className="edit-icon-btn" 
                       onClick={() => navigate(`/users/${user.id}/edit`)}
-                      title="Edit User"
+                      title={t('users.button.edit')}
                       aria-label="Edit User"
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#007bff', padding: '5px' }}
                     >
@@ -273,7 +276,7 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
                   {isAdmin && (
                     <button 
                       onClick={() => handleResetPassword(user.email)}
-                      title="Send Password Reset Link"
+                      title={t('users.button.reset')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', padding: '5px' }}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -284,15 +287,15 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
             
             <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '15px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.95rem', color: '#444' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#888' }}>ID:</span>
+                <span style={{ color: '#888' }}>{t('users.label.id')}</span>
                 <span>{user.id}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#888' }}>Age:</span>
+                <span style={{ color: '#888' }}>{t('users.label.age')}</span>
                 <span>{user.age || '-'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#888' }}>Phone:</span>
+                <span style={{ color: '#888' }}>{t('users.label.phone')}</span>
                 {user.phone ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span>{user.phone.length > 4 ? `****${user.phone.slice(-4)}` : user.phone}</span>
@@ -309,7 +312,7 @@ function UserList({ token, BASE_URL, userRole, currentUserId }) {
                 ) : '-'}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#888' }}>Address:</span>
+                <span style={{ color: '#888' }}>{t('users.label.address')}</span>
                 <span style={{ textAlign: 'right', maxWidth: '60%', wordBreak: 'break-word' }}>{user.address || '-'}</span>
               </div>
             </div>

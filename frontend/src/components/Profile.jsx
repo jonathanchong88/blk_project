@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePushNotifications } from '../hooks/usePushNotifications';
+
 
 function Profile({ token, BASE_URL }) {
   const [profile, setProfile] = useState(null);
@@ -7,6 +9,15 @@ function Profile({ token, BASE_URL }) {
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = React.useRef(null);
+  
+  const { permission, isSubscribed, subscribeToPush } = usePushNotifications();
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  const handleEnableNotifications = async () => {
+    setNotifLoading(true);
+    await subscribeToPush(token, BASE_URL);
+    setNotifLoading(false);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -50,7 +61,7 @@ function Profile({ token, BASE_URL }) {
             'Content-Type': 'application/json', 
             'Authorization': `Bearer ${token}` 
           },
-          body: JSON.stringify({ image: reader.result, filename: file.name }),
+          body: JSON.stringify({ image: reader.result, filename: file.name, folder: 'profile' }),
         });
 
         if (!uploadResponse.ok) throw new Error('Upload failed');
@@ -125,6 +136,31 @@ function Profile({ token, BASE_URL }) {
         {profile.role && profile.role !== 'member' && (
           <div className="profile-info-item"><span>Role:</span> {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}</div>
         )}
+      </div>
+
+      <div className="profile-details" style={{ marginTop: '20px' }}>
+        <h3>Notification Settings</h3>
+        <div className="profile-info-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Push Notifications</span>
+            {isSubscribed ? (
+                <span style={{ color: 'green', fontWeight: 'bold' }}>Enabled & Synced</span>
+            ) : (
+                <button 
+                  onClick={handleEnableNotifications} 
+                  disabled={notifLoading}
+                  style={{
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                    {notifLoading ? 'Enabling...' : (permission === 'granted' ? 'Sync Subscription' : 'Enable')}
+                </button>
+            )}
+        </div>
       </div>
     </div>
   );

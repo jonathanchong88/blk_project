@@ -1,9 +1,6 @@
 const supabase = require('../../../db');
 const { authenticateToken } = require('../../../middleware/auth');
-const { cors, runMiddleware } = require('../../../middleware/cors');
-
 export default async function handler(req, res) {
-    await runMiddleware(req, res, cors);
 
     const user = await authenticateToken(req);
 
@@ -17,15 +14,26 @@ export default async function handler(req, res) {
                 .eq('id', id)
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Database query error in events/[id].js:', error);
+                return res.status(500).json({ error: error.message, details: error.details });
+            }
             if (!data) return res.status(404).json({ message: 'Event not found' });
             
+            let likesCount = 0;
+            if (Array.isArray(data.event_likes)) {
+                likesCount = data.event_likes[0]?.count || 0;
+            } else if (data.event_likes && typeof data.event_likes === 'object') {
+                likesCount = data.event_likes.count || 0;
+            }
+
             const eventWithCount = {
                 ...data,
-                likes_count: data.event_likes[0]?.count || 0
+                likes_count: likesCount
             };
             res.json(eventWithCount);
         } catch (err) {
+            console.error('Unhandled error in individual event GET:', err);
             res.status(500).json({ error: err.message });
         }
     } else if (req.method === 'PUT') {

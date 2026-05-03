@@ -31,6 +31,11 @@ import SalvationList from './components/SalvationList';
 import Activities from './components/Activities';
 import Footer from './components/Footer';
 import PendingApproval from './components/PendingApproval';
+import News from './components/News';
+import PastNews from './components/PastNews';
+import CreateEditNews from './components/CreateEditNews';
+import NewsDetail from './components/NewsDetail';
+import WelcomeManager from './components/WelcomeManager';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/todos`;
@@ -101,7 +106,7 @@ function App() {
             <PendingApproval logout={logout} />
           ) : (
             <Routes>
-            <Route path="/" element={<Home BASE_URL={BASE_URL} token={token} />} />
+            <Route path="/" element={<Home BASE_URL={BASE_URL} token={token} userRole={userRole} />} />
             <Route path="/login" element={<Auth setToken={setToken} BASE_URL={BASE_URL} />} />
             <Route path="/forgot-password" element={<ForgotPassword BASE_URL={BASE_URL} />} />
             <Route path="/reset-password" element={<ResetPassword BASE_URL={BASE_URL} />} />
@@ -134,6 +139,21 @@ function App() {
               <ProtectedRoute token={token}><SalvationList token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
             } />
             
+            <Route path="/admin/welcome-section" element={
+              <ProtectedRoute token={token}><WelcomeManager token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+            } />
+
+            {/* News Routes */}
+            <Route path="/news" element={<News token={token} BASE_URL={BASE_URL} userRole={userRole} />} />
+            <Route path="/news/past" element={<PastNews token={token} BASE_URL={BASE_URL} />} />
+            <Route path="/news/create" element={
+              <ProtectedRoute token={token}><CreateEditNews token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+            } />
+            <Route path="/news/:id/edit" element={
+              <ProtectedRoute token={token}><CreateEditNews token={token} BASE_URL={BASE_URL} /></ProtectedRoute>
+            } />
+            <Route path="/news/:id" element={<NewsDetail token={token} BASE_URL={BASE_URL} userRole={userRole} />} />
+
             {/* Song Routes */}
             <Route path="/worship/songs" element={<SongList token={token} BASE_URL={BASE_URL} />} />
             <Route path="/worship/songs/create" element={
