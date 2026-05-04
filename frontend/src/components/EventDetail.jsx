@@ -436,7 +436,7 @@ function EventDetail({ token, BASE_URL }) {
                     )}
                 </div>
             </div>
-            <div className="event-detail-header" style={{ backgroundImage: `url(${event.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}>
+            <div className="event-detail-header" style={{ backgroundImage: `url(${event.image_url ? (event.image_url.startsWith('http') ? event.image_url : `${BASE_URL}${event.image_url}`) : 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}>
                 <div className="event-detail-title">
                     <h1>{event.title}</h1>
                     <span className="event-date">
