@@ -107,7 +107,7 @@ function NewsDetail({ token, BASE_URL, userRole }) {
       {newsItem.image_url && (
         <div
           style={{
-            width: '100%', height: '320px', backgroundImage: `url(${newsItem.image_url})`,
+            width: '100%', height: '320px', backgroundImage: `url(${newsItem.image_url.startsWith('http') ? newsItem.image_url : `${BASE_URL}${newsItem.image_url}`})`,
             backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '12px',
             marginBottom: '24px',
           }}

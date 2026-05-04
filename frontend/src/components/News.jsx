@@ -172,7 +172,7 @@ function News({ token, BASE_URL, userRole }) {
                 <div key={item.id} className="event-card" onClick={() => navigate(`/news/${item.id}`)} style={{ cursor: 'pointer' }}>
                   <div
                     className="event-image"
-                    style={{ backgroundImage: `url(${item.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1350&q=80'})` }}
+                    style={{ backgroundImage: `url(${item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${BASE_URL}${item.image_url}`) : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1350&q=80'})` }}
                   >
                     <div className="event-date-badge">
                       {new Date(item.date_from).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
