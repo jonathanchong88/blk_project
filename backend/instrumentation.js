@@ -11,6 +11,6 @@ export async function register() {
 
     // RENDER_EXTERNAL_URL is set automatically by Render for every service.
     // You can also set NEXT_PUBLIC_BACKEND_URL manually in your Render env vars.
-    startKeepAlive();
+    // startKeepAlive();
   }
 }

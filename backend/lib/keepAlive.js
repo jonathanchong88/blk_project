@@ -18,6 +18,8 @@ let timer = null;
  *                          RENDER_EXTERNAL_URL env vars automatically.
  */
 function startKeepAlive(baseUrl) {
+  // Suspended: No longer needed with the starter plan.
+  return;
   const url =
     baseUrl ||
     process.env.RENDER_EXTERNAL_URL ||
