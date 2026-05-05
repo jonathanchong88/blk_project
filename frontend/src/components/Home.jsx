@@ -271,7 +271,7 @@ function Home({ BASE_URL, token, userRole }) {
             <div key={event.id} className="horizontal-card" onClick={() => navigate(`/events/${event.id}`)}>
               <div
                 className="card-image"
-                style={{ backgroundImage: `url(${event.image_url || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}
+                style={{ backgroundImage: `url(${event.image_url ? (event.image_url.startsWith('http') ? event.image_url : `${BASE_URL}${event.image_url}`) : 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}
               ></div>
               <div className="card-content">
                 <h3>{event.title}</h3>
@@ -304,7 +304,7 @@ function Home({ BASE_URL, token, userRole }) {
               style={{ cursor: 'pointer' }}>
               <div
                 className="card-image"
-                style={{ backgroundImage: `url(${item.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1350&q=80'})` }}
+                style={{ backgroundImage: `url(${item.image_url ? (item.image_url.startsWith('http') ? item.image_url : `${BASE_URL}${item.image_url}`) : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1350&q=80'})` }}
               />
               <div className="card-content">
                 <h3>{item.title}</h3>
@@ -327,7 +327,7 @@ function Home({ BASE_URL, token, userRole }) {
             <div key={song.id} className="horizontal-card" onClick={() => navigate(`/worship/songs/${song.id}`)}>
               <div
                 className="card-image"
-                style={{ backgroundImage: `url(${song.image_url || 'https://images.unsplash.com/photo-1507838153414-b4b713384ebd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}
+                style={{ backgroundImage: `url(${song.image_url ? (song.image_url.startsWith('http') ? song.image_url : `${BASE_URL}${song.image_url}`) : 'https://images.unsplash.com/photo-1507838153414-b4b713384ebd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'})` }}
               ></div>
               <div className="card-content">
                 <h3>
@@ -381,7 +381,7 @@ function Home({ BASE_URL, token, userRole }) {
                   <div className="welcome-card-avatar-wrap">
                     {entry.image_url ? (
                       <img
-                        src={`${BASE_URL}${entry.image_url}`}
+                        src={entry.image_url.startsWith('http') ? entry.image_url : `${BASE_URL}${entry.image_url}`}
                         alt={author || title}
                         className="welcome-card-avatar"
                       />

@@ -83,7 +83,7 @@ function SongList({ token, BASE_URL }) {
       <div className="events-grid">
         {filteredSongs.map(song => (
           <div key={song.id} className="event-card" onClick={() => navigate(`/worship/songs/${song.id}`)} style={{ cursor: 'pointer' }}>
-            {song.image_url && <div className="event-image" style={{ backgroundImage: `url(${song.image_url})` }}></div>}
+            {song.image_url && <div className="event-image" style={{ backgroundImage: `url(${song.image_url.startsWith('http') ? song.image_url : `${BASE_URL}${song.image_url}`})` }}></div>}
             <div className="event-content">
               <h3>
                 {song.title}
