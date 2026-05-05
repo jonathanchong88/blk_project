@@ -202,7 +202,7 @@ function SongDetail({ token, BASE_URL }) {
       </div>
 
       {song.image_url && (
-        <div className="event-detail-header" style={{ backgroundImage: `url(${song.image_url})`, height: '200px' }}></div>
+        <div className="event-detail-header" style={{ backgroundImage: `url(${song.image_url.startsWith('http') ? song.image_url : `${BASE_URL}${song.image_url}`})`, height: '200px' }}></div>
       )}
 
       <div className="event-detail-content">
